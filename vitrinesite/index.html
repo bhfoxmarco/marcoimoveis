@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Imóveis — Região Nordeste · BH</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #1a1a1a;
+    }
+
+    /* ── Header ── */
+    header {
+      background: white;
+      border-bottom: 1px solid #e8e8e8;
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 1.1rem; font-weight: 700; color: #1a1a1a; text-decoration: none;
+    }
+    .logo-icon {
+      width: 32px; height: 32px; background: #5063F0; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 1rem; font-weight: 800;
+    }
+    .header-info { font-size: 0.8rem; color: #666; text-align: right; }
+    .header-info strong { color: #1a1a1a; display: block; font-size: 0.85rem; }
+
+    /* ── Hero ── */
+    .hero {
+      background: white; padding: 24px 24px 20px;
+      border-bottom: 1px solid #e8e8e8;
+    }
+    .hero-inner { max-width: 1200px; margin: 0 auto; }
+    .hero h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 4px; }
+    .hero p { font-size: 0.88rem; color: #666; }
+    .hero-stats { display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
+    .stat { font-size: 0.82rem; color: #666; }
+    .stat strong { color: #1a1a1a; font-size: 0.95rem; }
+    .dot-verde {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #27ae60; display: inline-block; margin-right: 4px;
+    }
+
+    /* ── Barra de filtros ── */
+    .barra-filtros {
+      background: white;
+      border-bottom: 1px solid #e8e8e8;
+      position: sticky;
+      top: 64px;
+      z-index: 99;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+    .filtros-inner {
+      max-width: 1200px; margin: 0 auto;
+      padding: 14px 24px;
+      display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;
+    }
+
+    /* ── Grupo de filtro ── */
+    .filtro-grupo { display: flex; flex-direction: column; gap: 5px; }
+    .filtro-label {
+      font-size: 0.68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px; color: #999;
+    }
+
+    /* ── Chips de faixa ── */
+    .filtro-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .chip {
+      padding: 7px 14px; border-radius: 20px;
+      border: 1.5px solid #ddd; background: white;
+      font-size: 0.8rem; font-weight: 500; cursor: pointer;
+      transition: all 0.15s; color: #444; white-space: nowrap;
+    }
+    .chip:hover { border-color: #5063F0; color: #5063F0; }
+    .chip.ativo { background: #5063F0; border-color: #5063F0; color: white; }
+
+    /* ── Combobox de bairro ── */
+    .select-bairro {
+      padding: 7px 36px 7px 12px;
+      border-radius: 20px;
+      border: 1.5px solid #ddd;
+      background: white;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: #444;
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      transition: border-color 0.15s;
+      min-width: 180px;
+    }
+    .select-bairro:focus, .select-bairro:hover { border-color: #5063F0; color: #5063F0; }
+    .select-bairro.ativo { border-color: #5063F0; color: #5063F0; background-color: #f0f2ff; }
+
+    /* ── Resultado ── */
+    .filtro-resultado {
+      max-width: 1200px; margin: 0 auto;
+      padding: 8px 24px 10px;
+      font-size: 0.8rem; color: #888;
+      display: flex; align-items: center; gap: 6px;
+      border-top: 1px solid #f5f5f5;
+    }
+    .resultado-numero { font-size: 0.95rem; font-weight: 700; color: #5063F0; }
+
+    /* ── Container ── */
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px 24px; }
+
+    /* ── Seção bairro ── */
+    .bairro-secao { margin-bottom: 36px; }
+    .bairro-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px; padding-bottom: 10px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+    .bairro-titulo { font-size: 1.05rem; font-weight: 700; }
+    .bairro-count {
+      font-size: 0.78rem; color: #888;
+      background: #f5f5f5; padding: 3px 10px; border-radius: 12px;
+    }
+
+    /* ── Grid de cards ── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 14px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: white; border-radius: 12px; overflow: hidden;
+      cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+      border: 1px solid #ebebeb; text-decoration: none;
+      color: inherit; display: block;
+    }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+    .card-foto {
+      position: relative; width: 100%; height: 150px;
+      background: #e8e8e8; overflow: hidden;
+    }
+    .card-foto img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+    .card:hover .card-foto img { transform: scale(1.04); }
+    .card-foto-placeholder {
+      width: 100%; height: 100%;
+      background: linear-gradient(135deg, #eee 0%, #ddd 100%);
+      display: flex; align-items: center; justify-content: center;
+      color: #bbb; font-size: 1.8rem;
+    }
+    .card-tags { position: absolute; top: 8px; left: 8px; display: flex; gap: 4px; }
+    .tag { font-size: 0.65rem; font-weight: 600; padding: 3px 7px; border-radius: 4px; }
+    .tag-exclusivo { background: #1a1a1a; color: white; }
+    .tag-novo { background: #5063F0; color: white; }
+    .card-body { padding: 11px 13px 13px; }
+    .card-preco { font-size: 1rem; font-weight: 700; margin-bottom: 2px; }
+    .card-condo { font-size: 0.72rem; color: #888; margin-bottom: 7px; }
+    .card-detalhes {
+      font-size: 0.75rem; color: #444;
+      display: flex; gap: 5px; align-items: center;
+      flex-wrap: wrap; margin-bottom: 5px;
+    }
+    .sep { color: #ccc; font-size: 0.55rem; }
+    .card-endereco { font-size: 0.7rem; color: #999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* ── Vazio ── */
+    .vazio {
+      text-align: center; padding: 60px 24px; color: #bbb;
+    }
+    .vazio-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .vazio-titulo { font-size: 1rem; font-weight: 600; color: #888; margin-bottom: 6px; }
+    .vazio-sub { font-size: 0.85rem; }
+
+    footer {
+      background: white; border-top: 1px solid #e8e8e8;
+      padding: 18px 24px; text-align: center;
+      font-size: 0.75rem; color: #aaa; margin-top: 16px;
+    }
+    footer strong { color: #666; }
+
+    @media (max-width: 600px) {
+      .cards-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .hero h1 { font-size: 1.15rem; }
+      .container, .filtros-inner { padding: 14px; }
+      header { padding: 0 14px; }
+      .select-bairro { min-width: 140px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="#">
+    <div class="logo-icon">S</div>
+    Selectlar
+  </a>
+  <div class="header-info">
+    <strong>Marco Silva</strong>
+    Corretor Parceiro QuintoAndar
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-inner">
+    <h1>Imóveis à venda — Região Nordeste</h1>
+    <p>Belo Horizonte, MG · Curadoria de Marco Silva</p>
+    <div class="hero-stats">
+      <div class="stat"><strong id="total-geral">—</strong> imóveis no total</div>
+      <div class="stat">·</div>
+      <div class="stat"><span class="dot-verde"></span><span id="data-atualizacao">Carregando...</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- BARRA DE FILTROS -->
+<div class="barra-filtros">
+  <div class="filtros-inner">
+
+    <div class="filtro-grupo">
+      <div class="filtro-label">Bairro</div>
+      <select class="select-bairro" id="select-bairro" onchange="setBairro(this.value, this)">
+        <option value="todos">Todos os bairros</option>
+        <option value="Cidade Nova">Cidade Nova</option>
+        <option value="Silveira">Silveira</option>
+        <option value="Ipiranga">Ipiranga</option>
+        <option value="Concórdia">Concórdia</option>
+        <option value="Renascença">Renascença</option>
+        <option value="Palmares">Palmares</option>
+        <option value="União">União</option>
+        <option value="Fernão Dias">Fernão Dias</option>
+        <option value="São Gabriel">São Gabriel</option>
+        <option value="Goiânia">Goiânia</option>
+        <option value="Maria Virgínia">Maria Virgínia</option>
+      </select>
+    </div>
+
+    <div class="filtro-grupo">
+      <div class="filtro-label">Faixa de valor</div>
+      <div class="filtro-chips">
+        <button class="chip ativo" onclick="setFaixa('todas', this)">Todas</button>
+        <button class="chip" onclick="setFaixa('350-600', this)">R$ 350k–600k</button>
+        <button class="chip" onclick="setFaixa('600-800', this)">R$ 600k–800k</button>
+        <button class="chip" onclick="setFaixa('800-1200', this)">R$ 800k–1,2M</button>
+        <button class="chip" onclick="setFaixa('1200-2000', this)">R$ 1,2M–2M</button>
+      </div>
+    </div>
+
+  </div>
+  <div class="filtro-resultado">
+    <span class="resultado-numero" id="resultado-numero">—</span>
+    <span id="resultado-texto">imóveis encontrados</span>
+  </div>
+</div>
+
+<div class="container" id="conteudo"></div>
+
+<footer>
+  Curadoria por <strong>Marco Silva · Selectlar</strong> · Corretor Parceiro QuintoAndar
+</footer>
+
+<script>
+  const CORRETOR_TOKEN = 'MarcoSilva-0DVC';
+
+  const BAIRROS = [
+    'Cidade Nova','Silveira','Ipiranga','Concórdia','Renascença',
+    'Palmares','União','Fernão Dias','São Gabriel','Goiânia','Maria Virgínia'
+  ];
+
+  const FAIXAS = [
+    { id:'350-600',   min:350000,  max:600000  },
+    { id:'600-800',   min:600000,  max:800000  },
+    { id:'800-1200',  min:800000,  max:1200000 },
+    { id:'1200-2000', min:1200000, max:2000000 },
+  ];
+
+  function gerarExemplos() {
+    const lista = [];
+    const tags = ['exclusivo','novo','','',''];
+    let codigo = 890000000;
+    BAIRROS.forEach(bairro => {
+      FAIXAS.forEach(faixa => {
+        for (let i = 0; i < 5; i++) {
+          lista.push({
+            codigo: codigo++,
+            preco: Math.floor(faixa.min + Math.random() * (faixa.max - faixa.min)),
+            condo: Math.floor(300 + Math.random() * 700),
+            area: Math.floor(50 + Math.random() * 120),
+            quartos: Math.floor(1 + Math.random() * 3),
+            vagas: Math.floor(Math.random() * 3),
+            endereco: `Rua Exemplo, ${Math.floor(100 + Math.random() * 900)}`,
+            bairro, faixa: faixa.id, foto: null,
+            tag: tags[Math.floor(Math.random() * tags.length)],
+          });
+        }
+      });
+    });
+    return lista;
+  }
+
+  let todosImoveis = [];
+  let faixaAtiva = 'todas';
+  let bairroAtivo = 'todos';
+
+  function fmt(v) {
+    return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0}).format(v);
+  }
+
+  function imoveisFiltrados() {
+    return todosImoveis.filter(i =>
+      (faixaAtiva === 'todas' || i.faixa === faixaAtiva) &&
+      (bairroAtivo === 'todos' || i.bairro === bairroAtivo)
+    );
+  }
+
+  function setFaixa(faixa, btn) {
+    faixaAtiva = faixa;
+    document.querySelectorAll('.filtro-chips .chip').forEach(b => b.classList.remove('ativo'));
+    btn.classList.add('ativo');
+    renderizar();
+  }
+
+  function setBairro(bairro) {
+    bairroAtivo = bairro;
+    const sel = document.getElementById('select-bairro');
+    sel.classList.toggle('ativo', bairro !== 'todos');
+    renderizar();
+    // Força atualização do contador
+    const filtrados = imoveisFiltrados();
+    document.getElementById('resultado-numero').textContent = filtrados.length;
+  }
+
+  function renderizar() {
+    const conteudo = document.getElementById('conteudo');
+    conteudo.innerHTML = '';
+    const filtrados = imoveisFiltrados();
+
+    // Atualiza contador
+    document.getElementById('resultado-numero').textContent = filtrados.length;
+    const partes = [];
+    if (faixaAtiva !== 'todas') {
+      const f = FAIXAS.find(x => x.id === faixaAtiva);
+      if (f) partes.push(`${fmt(f.min)} – ${fmt(f.max)}`);
+    }
+    if (bairroAtivo !== 'todos') partes.push(bairroAtivo);
+    document.getElementById('resultado-texto').textContent =
+      partes.length ? `imóveis encontrados · ${partes.join(' · ')}` : 'imóveis encontrados';
+
+    const bairrosVisiveis = bairroAtivo === 'todos' ? BAIRROS : [bairroAtivo];
+
+    bairrosVisiveis.forEach(bairro => {
+      const imoveis = filtrados.filter(i => i.bairro === bairro);
+      if (imoveis.length === 0) return;
+
+      const secao = document.createElement('div');
+      secao.className = 'bairro-secao';
+      secao.innerHTML = `
+        <div class="bairro-header">
+          <div class="bairro-titulo">📍 ${bairro}</div>
+          <div class="bairro-count">${imoveis.length} imóvel(is)</div>
+        </div>
+        <div class="cards-grid"></div>
+      `;
+
+      const grid = secao.querySelector('.cards-grid');
+      imoveis.forEach(imovel => {
+        const vitrine = `https://vitrine.quintoandar.com.br/imovel/v2/${imovel.codigo}/${CORRETOR_TOKEN}`;
+        const card = document.createElement('a');
+        card.className = 'card';
+        card.href = vitrine;
+        card.target = '_blank';
+        card.rel = 'noopener noreferrer';
+
+        const fotoHtml = imovel.foto
+          ? `<img src="${imovel.foto}" alt="Imóvel" loading="lazy" onerror="this.parentElement.innerHTML='<div class=card-foto-placeholder>🏠</div>'" />`
+          : `<div class="card-foto-placeholder">🏠</div>`;
+
+        const tagHtml = imovel.tag === 'exclusivo'
+          ? `<span class="tag tag-exclusivo">Exclusivo</span>`
+          : imovel.tag === 'novo'
+          ? `<span class="tag tag-novo">Anúncio novo</span>`
+          : '';
+
+        card.innerHTML = `
+          <div class="card-foto">
+            ${fotoHtml}
+            <div class="card-tags">${tagHtml}</div>
+          </div>
+          <div class="card-body">
+            <div class="card-preco">${fmt(imovel.preco)}</div>
+            <div class="card-condo">R$ ${imovel.condo.toLocaleString('pt-BR')} Condo. + IPTU</div>
+            <div class="card-detalhes">
+              <span>📐 ${imovel.area}m²</span>
+              <span class="sep">·</span>
+              <span>🛏 ${imovel.quartos} qto${imovel.quartos!==1?'s':''}</span>
+              <span class="sep">·</span>
+              <span>🚗 ${imovel.vagas} vaga${imovel.vagas!==1?'s':''}</span>
+            </div>
+            <div class="card-endereco">${imovel.endereco}, ${bairro}</div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      conteudo.appendChild(secao);
+    });
+
+    if (filtrados.length === 0) {
+      conteudo.innerHTML = `
+        <div class="vazio">
+          <div class="vazio-icon">🔍</div>
+          <div class="vazio-titulo">Nenhum imóvel encontrado</div>
+          <div class="vazio-sub">Tente ajustar os filtros de faixa ou bairro</div>
+        </div>`;
+    }
+  }
+
+  function carregarDados(dadosSalvos) {
+    try {
+      const parsed = typeof dadosSalvos === 'string' ? JSON.parse(dadosSalvos) : dadosSalvos;
+      todosImoveis = parsed.imoveis || [];
+      document.getElementById('data-atualizacao').textContent =
+        parsed.atualizadoEm
+          ? `Atualizado em ${new Date(parsed.atualizadoEm).toLocaleString('pt-BR')}`
+          : 'Dados carregados';
+    } catch(e) {
+      todosImoveis = gerarExemplos();
+      document.getElementById('data-atualizacao').textContent = '⚠️ Dados de exemplo';
+    }
+    document.getElementById('total-geral').textContent = todosImoveis.length;
+    renderizar();
+  }
+
+  function init() {
+    // Tenta carregar do localStorage imediatamente
+    const local = localStorage.getItem('selectlar_imoveis');
+    if (local) {
+      carregarDados(local);
+      return;
+    }
+
+    // Se não tem dados ainda, aguarda o content.js injetar (até 3 segundos)
+    let tentativas = 0;
+    const intervalo = setInterval(() => {
+      tentativas++;
+      const dados = localStorage.getItem('selectlar_imoveis');
+      if (dados) {
+        clearInterval(intervalo);
+        carregarDados(dados);
+      } else if (tentativas >= 6) {
+        clearInterval(intervalo);
+        todosImoveis = gerarExemplos();
+        document.getElementById('data-atualizacao').textContent = '⚠️ Dados de exemplo — rode a extensão';
+        document.getElementById('total-geral').textContent = todosImoveis.length;
+        renderizar();
+      }
+    }, 500);
+  }
+
+  init();
+</script>
+</body>
+</html>
