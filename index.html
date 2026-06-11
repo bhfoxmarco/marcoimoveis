@@ -325,15 +325,12 @@
       // Filtro por bairro
       const okBairro = bairroAtivo === 'todos' || i.bairro === bairroAtivo;
 
-      // Filtro por faixa — usa o PREÇO REAL do imóvel, não o campo faixa
+      // Filtro por faixa — SEMPRE usa o preço real do imóvel
       let okFaixa = true;
       if (faixaAtiva !== 'todas') {
         const faixaObj = FAIXAS.find(f => f.id === faixaAtiva);
-        if (faixaObj && i.preco > 0) {
+        if (faixaObj) {
           okFaixa = i.preco >= faixaObj.min && i.preco <= faixaObj.max;
-        } else if (faixaObj && i.preco === 0) {
-          // Se não tem preço, usa o campo faixa como fallback
-          okFaixa = i.faixa === faixaAtiva;
         }
       }
 
