@@ -321,10 +321,21 @@
   }
 
   function imoveisFiltrados() {
-    return todosImoveis.filter(i =>
-      (faixaAtiva === 'todas' || i.faixa === faixaAtiva) &&
-      (bairroAtivo === 'todos' || i.bairro === bairroAtivo)
-    );
+    return todosImoveis.filter(i => {
+      // Filtro por bairro
+      const okBairro = bairroAtivo === 'todos' || i.bairro === bairroAtivo;
+
+      // Filtro por faixa — SEMPRE usa o preço real do imóvel
+      let okFaixa = true;
+      if (faixaAtiva !== 'todas') {
+        const faixaObj = FAIXAS.find(f => f.id === faixaAtiva);
+        if (faixaObj) {
+          okFaixa = i.preco >= faixaObj.min && i.preco <= faixaObj.max;
+        }
+      }
+
+      return okBairro && okFaixa;
+    });
   }
 
   function setFaixa(faixa, btn) {
@@ -432,7 +443,13 @@
   function carregarDados(dadosSalvos) {
     try {
       const parsed = typeof dadosSalvos === 'string' ? JSON.parse(dadosSalvos) : dadosSalvos;
-      todosImoveis = parsed.imoveis || [];
+      // Remove duplicatas — mantém só um imóvel por código
+      const vistos = new Set();
+      todosImoveis = (parsed.imoveis || []).filter(i => {
+        if (vistos.has(i.codigo)) return false;
+        vistos.add(i.codigo);
+        return true;
+      });
       document.getElementById('data-atualizacao').textContent =
         parsed.atualizadoEm
           ? `Atualizado em ${new Date(parsed.atualizadoEm).toLocaleString('pt-BR')}`
