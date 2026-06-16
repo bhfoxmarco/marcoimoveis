@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Selectlar · Apresentação de Imóvel</title>
+<meta name="description" content="Apresentação exclusiva por Marco Silva · Selectlar · Corretor Parceiro QuintoAndar"/>
+<meta property="og:title" content="Selectlar · Imóvel em destaque"/>
+<meta property="og:description" content="Apresentação exclusiva por Marco Silva · Corretor Parceiro QuintoAndar"/>
+<meta property="og:type" content="website"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0f2444;
+  --navy2:#1B3A6B;
+  --gold:#C9A84C;
+  --gold2:#e8c97a;
+  --cream:#faf8f4;
+  --ink:#0d1b2a;
+  --muted:#6b7a8d;
+  --line:rgba(255,255,255,0.12);
+  --line-dark:rgba(15,36,68,0.10);
+  --r:16px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden}
+
+/* HERO */
+.hero{position:relative;width:100%;height:100svh;min-height:600px;background:var(--navy);overflow:hidden;display:flex;flex-direction:column}
+.hero-video{position:absolute;inset:0;width:100%;height:100%}
+.hero-video iframe{width:100%;height:100%;border:none;object-fit:cover}
+.hero::before{content:'';position:absolute;top:0;left:0;right:0;height:220px;background:linear-gradient(to bottom,rgba(10,22,44,0.85) 0%,transparent 100%);z-index:2;pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:280px;background:linear-gradient(to top,rgba(10,22,44,0.92) 0%,transparent 100%);z-index:2;pointer-events:none}
+
+/* HEADER */
+.hero-header{position:absolute;top:0;left:0;right:0;z-index:10;padding:24px 32px;display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none}
+.brand-gem{width:40px;height:40px;border:1.5px solid var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--gold);letter-spacing:-1px;backdrop-filter:blur(8px);background:rgba(15,36,68,0.30)}
+.brand-name{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:#fff;letter-spacing:0.08em;text-transform:uppercase}
+.brand-sub{font-size:10px;font-weight:300;color:rgba(255,255,255,0.50);letter-spacing:0.14em;text-transform:uppercase;margin-top:2px}
+.hero-badge{backdrop-filter:blur(8px);background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:32px;padding:8px 18px;font-size:11px;color:rgba(255,255,255,0.70);font-weight:400;letter-spacing:0.06em;display:flex;align-items:center;gap:8px}
+.hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0}
+
+/* HERO FOOTER */
+.hero-footer{position:absolute;bottom:0;left:0;right:0;z-index:10;padding:32px;display:flex;align-items:flex-end;justify-content:space-between;gap:20px}
+.hero-address{display:flex;flex-direction:column;gap:6px}
+.hero-rua{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,5vw,48px);font-weight:400;color:#fff;line-height:1.1;letter-spacing:-0.01em}
+.hero-bairro{font-size:13px;color:rgba(255,255,255,0.55);font-weight:300;letter-spacing:0.08em;text-transform:uppercase}
+.hero-preco-box{text-align:right;flex-shrink:0}
+.hero-preco-label{font-size:10px;color:var(--gold);font-weight:500;letter-spacing:0.12em;text-transform:uppercase;display:block;margin-bottom:4px}
+.hero-preco{font-family:'Cormorant Garamond',serif;font-size:clamp(24px,4vw,38px);font-weight:400;color:#fff;letter-spacing:-0.02em;white-space:nowrap}
+
+/* SCROLL CTA */
+.scroll-cta{position:absolute;bottom:110px;left:50%;transform:translateX(-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;opacity:0.60;transition:opacity 0.2s}
+.scroll-cta:hover{opacity:1}
+.scroll-cta span{font-size:10px;color:#fff;letter-spacing:0.14em;text-transform:uppercase;font-weight:400}
+.scroll-arrow{width:24px;height:24px;border-right:1.5px solid rgba(255,255,255,0.6);border-bottom:1.5px solid rgba(255,255,255,0.6);transform:rotate(45deg);animation:bounce 1.6s ease-in-out infinite}
+@keyframes bounce{0%,100%{transform:rotate(45deg) translateY(0)}50%{transform:rotate(45deg) translateY(5px)}}
+
+/* SEÇÃO DADOS */
+.secao{max-width:880px;margin:0 auto;padding:60px 24px 80px}
+.divider{display:flex;align-items:center;gap:16px;margin-bottom:40px}
+.divider-line{flex:1;height:1px;background:var(--line-dark)}
+.divider-gem{width:8px;height:8px;background:var(--gold);transform:rotate(45deg);flex-shrink:0}
+.divider-label{font-size:10px;font-weight:500;color:var(--muted);letter-spacing:0.16em;text-transform:uppercase}
+
+/* GRID CARACTERÍSTICAS */
+.chars-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:var(--line-dark);border-radius:var(--r);overflow:hidden;border:1px solid var(--line-dark);margin-bottom:20px}
+.char-item{background:var(--cream);padding:28px 24px;display:flex;flex-direction:column;gap:8px;transition:background 0.15s}
+.char-item:hover{background:#fff}
+.char-num{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:400;color:var(--navy);line-height:1;letter-spacing:-0.02em}
+.char-label{font-size:11px;color:var(--muted);font-weight:400;text-transform:uppercase;letter-spacing:0.10em}
+.char-detalhe{font-size:12px;color:var(--gold);font-weight:500;margin-top:-4px}
+
+/* CUSTOS */
+.custos-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.custo-card{background:#fff;border:1px solid var(--line-dark);border-radius:12px;padding:20px 24px;display:flex;justify-content:space-between;align-items:center}
+.custo-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.10em}
+.custo-val{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--navy)}
+
+/* OBS CORRETOR */
+.obs-card{background:var(--navy);border-radius:var(--r);padding:32px;margin-top:12px;display:none;position:relative;overflow:hidden}
+.obs-card::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,0.15) 0%,transparent 70%)}
+.obs-eyebrow{font-size:10px;font-weight:500;color:var(--gold);letter-spacing:0.16em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.obs-eyebrow::before{content:'';width:20px;height:1px;background:var(--gold)}
+.obs-texto{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;font-style:italic;color:rgba(255,255,255,0.90);line-height:1.7;white-space:pre-wrap}
+
+/* BOTÃO COMPARTILHAR */
+.share-section{max-width:880px;margin:0 auto;padding:0 24px 64px;display:flex;justify-content:center}
+.share-btn{
+  display:inline-flex;align-items:center;gap:12px;
+  background:transparent;
+  border:1px solid var(--line-dark);
+  border-radius:40px;
+  padding:14px 28px;
+  font-family:'Inter',sans-serif;
+  font-size:13px;font-weight:500;
+  color:var(--muted);
+  letter-spacing:0.06em;
+  cursor:pointer;
+  transition:all 0.2s;
+  text-decoration:none;
+}
+.share-btn:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
+.share-btn:hover .share-icon path,.share-btn:hover .share-icon circle,.share-btn:hover .share-icon line{stroke:#fff}
+.share-icon{width:18px;height:18px;flex-shrink:0;transition:all 0.2s}
+.share-icon path,.share-icon circle,.share-icon line{stroke:var(--muted);stroke-width:1.5;fill:none;transition:stroke 0.2s}
+
+/* TOAST de confirmação */
+.toast{
+  position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:#fff;
+  font-size:12px;letter-spacing:0.06em;
+  padding:12px 24px;border-radius:32px;
+  opacity:0;transition:all 0.3s;
+  z-index:999;pointer-events:none;
+  white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* CORRETOR */
+.corretor-section{background:var(--navy);padding:48px 24px;margin-top:0}
+.corretor-inner{max-width:880px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:32px}
+.corretor-left{display:flex;align-items:center;gap:20px}
+.corretor-avatar{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--navy);flex-shrink:0}
+.corretor-nome{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:#fff;letter-spacing:0.01em}
+.corretor-cargo{font-size:11px;color:rgba(255,255,255,0.45);font-weight:300;letter-spacing:0.10em;text-transform:uppercase;margin-top:4px}
+.corretor-marca{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--gold);letter-spacing:0.12em;text-transform:uppercase;opacity:0.80}
+
+footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;color:rgba(255,255,255,0.25);letter-spacing:0.06em}
+
+/* LOADING */
+#loading{position:fixed;inset:0;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;gap:24px;transition:opacity 0.6s}
+.loading-brand{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:var(--gold);letter-spacing:0.20em;text-transform:uppercase}
+.loading-bar{width:120px;height:1px;background:rgba(255,255,255,0.15);position:relative;overflow:hidden;border-radius:2px}
+.loading-fill{position:absolute;top:0;left:-100%;width:100%;height:100%;background:var(--gold);animation:load 1.4s ease-in-out infinite}
+@keyframes load{0%{left:-100%}100%{left:100%}}
+.loading-sub{font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:0.16em;text-transform:uppercase}
+
+/* ERRO */
+#erro-box{display:none;min-height:100svh;background:var(--navy);align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:40px;text-align:center}
+.erro-titulo{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:rgba(255,255,255,0.80)}
+.erro-msg{font-size:14px;color:rgba(255,255,255,0.40);max-width:400px;line-height:1.6}
+
+/* MOBILE */
+@media(max-width:640px){
+  .hero-header{padding:20px}
+  .hero-footer{padding:20px;flex-direction:column;align-items:flex-start;gap:12px}
+  .hero-preco-box{text-align:left}
+  .brand-name{font-size:17px}
+  .hero-badge{display:none}
+  .chars-grid{grid-template-columns:repeat(2,1fr)}
+  .custos-row{grid-template-columns:1fr}
+  .corretor-inner{flex-direction:column;text-align:center;gap:20px}
+  .corretor-left{flex-direction:column}
+  .scroll-cta{bottom:130px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="loading-brand">Selectlar</div>
+  <div class="loading-bar"><div class="loading-fill"></div></div>
+  <div class="loading-sub">Carregando apresentação</div>
+</div>
+
+<!-- ERRO -->
+<div id="erro-box">
+  <div class="loading-brand">Selectlar</div>
+  <div class="erro-titulo">Imóvel não encontrado</div>
+  <div class="erro-msg" id="erro-msg">Verifique o link recebido ou entre em contato com o corretor.</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- CONTEÚDO -->
+<div id="conteudo" style="display:none">
+
+  <section class="hero" id="hero-section">
+    <div class="hero-video">
+      <iframe id="video-player" src="" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="Vídeo do imóvel"></iframe>
+    </div>
+    <div class="hero-header">
+      <a href="https://marcoimoveis.com.br" class="brand">
+        <div class="brand-gem">S</div>
+        <div>
+          <div class="brand-name">Selectlar</div>
+          <div class="brand-sub">Marco Silva · Corretor</div>
+        </div>
+      </a>
+      <div class="hero-badge">
+        <div class="hero-badge-dot"></div>
+        Corretor Parceiro QuintoAndar
+      </div>
+    </div>
+    <div class="scroll-cta" onclick="document.getElementById('dados-section').scrollIntoView({behavior:'smooth'})">
+      <span>Ver detalhes</span>
+      <div class="scroll-arrow"></div>
+    </div>
+    <div class="hero-footer">
+      <div class="hero-address">
+        <div class="hero-rua" id="hero-rua">Carregando...</div>
+        <div class="hero-bairro" id="hero-bairro"></div>
+      </div>
+      <div class="hero-preco-box">
+        <span class="hero-preco-label">Valor de venda</span>
+        <div class="hero-preco" id="hero-preco">—</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao" id="dados-section">
+    <div class="divider">
+      <div class="divider-line"></div>
+      <div class="divider-gem"></div>
+      <div class="divider-label">Características</div>
+      <div class="divider-gem"></div>
+      <div class="divider-line"></div>
+    </div>
+    <div class="chars-grid" id="chars-grid"></div>
+    <div class="custos-row" id="custos-row" style="display:none"></div>
+    <div class="obs-card" id="obs-card">
+      <div class="obs-eyebrow">Nota do corretor</div>
+      <div class="obs-texto" id="obs-texto"></div>
+    </div>
+  </section>
+
+  <!-- BOTÃO COMPARTILHAR -->
+  <div class="share-section">
+    <button class="share-btn" id="share-btn" onclick="compartilhar()">
+      <svg class="share-icon" viewBox="0 0 24 24">
+        <circle cx="18" cy="5" r="3"/>
+        <circle cx="6" cy="12" r="3"/>
+        <circle cx="18" cy="19" r="3"/>
+        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+      </svg>
+      Compartilhar este imóvel
+    </button>
+  </div>
+
+  <section class="corretor-section">
+    <div class="corretor-inner">
+      <div class="corretor-left">
+        <div class="corretor-avatar">M</div>
+        <div>
+          <div class="corretor-nome">Marco Silva</div>
+          <div class="corretor-cargo">Corretor Parceiro QuintoAndar</div>
+        </div>
+      </div>
+      <div class="corretor-marca">Selectlar</div>
+    </div>
+  </section>
+
+  <footer>
+    © Selectlar · Marco Silva · Corretor Parceiro QuintoAndar · Belo Horizonte, MG
+  </footer>
+</div>
+
+<script>
+const fmt=v=>v!=null?'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0}):null;
+
+function mostrarErro(msg){
+  document.getElementById('loading').style.display='none';
+  const b=document.getElementById('erro-box');
+  b.style.display='flex';
+  document.getElementById('erro-msg').textContent=msg||'Verifique o link recebido.';
+}
+
+function ocultarLoading(){
+  const el=document.getElementById('loading');
+  el.style.opacity='0';
+  setTimeout(()=>el.style.display='none',600);
+  document.getElementById('conteudo').style.display='block';
+}
+
+function mostrarToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+// Compartilhar — Web Share API no celular, copia link no desktop
+async function compartilhar(){
+  const url=location.href;
+  const titulo=document.getElementById('hero-rua')?.textContent||'Imóvel';
+  const bairro=document.getElementById('hero-bairro')?.textContent||'';
+
+  if(navigator.share){
+    try{
+      await navigator.share({
+        title:`${titulo} · Selectlar`,
+        text:`Veja este imóvel: ${titulo}${bairro?' — '+bairro:''}`,
+        url
+      });
+    }catch(e){}
+  }else{
+    try{
+      await navigator.clipboard.writeText(url);
+      mostrarToast('Link copiado! Cole no WhatsApp.');
+    }catch(e){
+      mostrarToast('Copie o link da barra do navegador.');
+    }
+  }
+}
+
+const params=new URLSearchParams(location.search);
+const imovelId=params.get('id');
+const msgCorretor=params.get('msg')?decodeURIComponent(params.get('msg')):null;
+
+if(!imovelId){
+  mostrarErro('Nenhum imóvel foi especificado. Verifique o link recebido.');
+}else{
+  carregarImovel(imovelId,msgCorretor);
+}
+
+async function carregarImovel(id,msg){
+  try{
+    const[resVideo,dadosImovel]=await Promise.all([
+      fetch(`https://www.quintoandar.com.br/api/kodak/v1/media/videos/house/${id}`,{headers:{'Accept':'application/json'}}).catch(()=>null),
+      buscarDadosImovel(id)
+    ]);
+
+    let clipId=null,hash=null;
+    if(resVideo&&resVideo.ok){
+      const vd=await resVideo.json();
+      const item=vd?.items?.find(i=>i.videoSource==='VIMEO'&&i.status==='transcode_complete')||vd?.items?.[0];
+      if(item?.sourceId){const p=item.sourceId.split('/');clipId=p[0];hash=p[1]||null;}
+    }
+
+    if(clipId){
+      const src=`https://player.vimeo.com/video/${clipId}?${hash?'h='+hash+'&':''}autoplay=0&title=0&byline=0&portrait=0&dnt=1`;
+      document.getElementById('video-player').src=src;
+    }else{
+      document.querySelector('.hero-video').innerHTML='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><span style="color:rgba(255,255,255,0.25);font-size:14px;letter-spacing:0.1em">Vídeo não disponível</span></div>';
+    }
+
+    preencherDados(dadosImovel,id);
+
+    if(msg&&msg.trim()){
+      document.getElementById('obs-texto').textContent=msg.trim().slice(0,500);
+      document.getElementById('obs-card').style.display='block';
+    }
+
+    ocultarLoading();
+  }catch(err){
+    mostrarErro('Não foi possível carregar o imóvel. Tente novamente.');
+  }
+}
+
+async function buscarDadosImovel(id){
+  const endpoints=[
+    `https://www.quintoandar.com.br/api/yellow-pages/v2/houses/${id}`,
+    `https://www.quintoandar.com.br/api/house/v1/${id}`,
+    `https://www.quintoandar.com.br/api/listing/v2/houses/${id}`,
+  ];
+  for(const url of endpoints){
+    try{const r=await fetch(url,{headers:{'Accept':'application/json'}});if(r.ok){const d=await r.json();if(d)return d;}}catch(e){}
+  }
+  return null;
+}
+
+function preencherDados(d,id){
+  const rua=d?.address||d?.street||d?.streetName||`Imóvel #${id}`;
+  const bairro=d?.neighbourhood||d?.neighborhood||d?.district||'';
+  const cidade=d?.city||'Belo Horizonte';
+  const uf=d?.state||'MG';
+
+  document.getElementById('hero-rua').textContent=rua;
+  document.getElementById('hero-bairro').textContent=[bairro,cidade,uf].filter(Boolean).join(' · ').toUpperCase();
+
+  const preco=d?.salePrice||d?.price||d?.totalPrice;
+  document.getElementById('hero-preco').textContent=fmt(preco)||'Consulte';
+
+  const itens=[
+    d?.bedrooms!=null&&{num:d.bedrooms,label:'Quartos',detalhe:d.suites>0?`${d.suites} suíte${d.suites>1?'s':''}`:''},
+    (d?.area||d?.totalArea||d?.livingArea)!=null&&{num:d.area||d.totalArea||d.livingArea,label:'Área total',detalhe:'metros quadrados'},
+    d?.parkingSpaces!=null&&{num:d.parkingSpaces,label:'Vagas',detalhe:'de garagem'},
+    d?.bathrooms!=null&&{num:d.bathrooms,label:'Banheiros',detalhe:''},
+  ].filter(Boolean);
+
+  const grid=document.getElementById('chars-grid');
+  if(itens.length>0){
+    grid.innerHTML=itens.map(i=>`<div class="char-item"><div class="char-num">${i.num}</div><div class="char-label">${i.label}</div>${i.detalhe?`<div class="char-detalhe">${i.detalhe}</div>`:''}</div>`).join('');
+  }else{
+    grid.style.display='none';
+  }
+
+  const condo=d?.condominiumFee||d?.condominium;
+  const iptu=d?.iptu||d?.propertyTax;
+  const custos=[];
+  if(condo)custos.push(`<div class="custo-card"><div class="custo-label">Condomínio / mês</div><div class="custo-val">${fmt(condo)}</div></div>`);
+  if(iptu)custos.push(`<div class="custo-card"><div class="custo-label">IPTU / ano</div><div class="custo-val">${fmt(iptu)}</div></div>`);
+  if(custos.length){const row=document.getElementById('custos-row');row.innerHTML=custos.join('');row.style.display='grid';}
+}
+</script>
+</body>
+</html>
