@@ -1,6 +1,63 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<!--
+=============================================================================
+  PROJETO : Selectlar · Vitrine de Vídeo de Imóvel
+  ARQUIVO : videoimoveis/index.html
+  AUTOR   : Marco Silva · Selectlar · Corretor Parceiro QuintoAndar
+  VERSÃO  : 3.2
+  DATA    : 2025
+
+  OBJETIVO:
+    Página de apresentação premium de imóvel com vídeo, características
+    e nota do corretor. Gerada automaticamente pela extensão Chrome
+    "Compartilhar Vídeo - QuintoAndar | Selectlar".
+
+  COMO FUNCIONA:
+    Todos os dados chegam via parâmetros na URL (sem chamadas de API).
+    A extensão Chrome coleta os dados da página do QuintoAndar e monta
+    a URL completa. Esta página apenas lê e exibe.
+
+  PARÂMETROS ACEITOS NA URL:
+    ?id        = ID do imóvel no QuintoAndar (obrigatório)
+    &clipId    = ID do vídeo no Vimeo
+    &hash      = Hash de segurança do vídeo Vimeo (para vídeos não listados)
+    &rua       = Endereço (rua e número)
+    &bairro    = Bairro do imóvel
+    &cidade    = Cidade (padrão: Belo Horizonte)
+    &uf        = Estado (padrão: MG)
+    &preco     = Valor de venda em reais (apenas números)
+    &quartos   = Número de quartos
+    &suites    = Número de suítes
+    &area      = Área em m²
+    &vagas     = Número de vagas de garagem
+    &banheiros = Número de banheiros
+    &condo     = Valor do condomínio em reais
+    &iptu      = Valor do IPTU anual em reais
+    &msg       = Nota/descrição do corretor (máx. 500 caracteres)
+
+  EXEMPLO DE URL:
+    https://marcoimoveis.com.br/videoimoveis/?id=895427382
+      &clipId=1182108531&hash=33baa9d45e
+      &rua=Rua+Professor+Antônio+Márcio,+850
+      &bairro=Palmares&preco=440000
+      &quartos=2&area=62&vagas=1&banheiros=1
+      &condo=296&iptu=960
+      &msg=Excelente+localização
+
+  PRÉ-REQUISITOS:
+    - Extensão Chrome "Compartilhar Vídeo - QuintoAndar | Selectlar" v3.1+
+    - Hospedagem no GitHub Pages em: marcoimoveis.com.br/videoimoveis/
+    - Imóvel deve ter vídeo cadastrado no QuintoAndar (Vimeo)
+    - Acesso à internet para carregar fontes Google e player Vimeo
+
+  DEPENDÊNCIAS EXTERNAS:
+    - Google Fonts: Cormorant Garamond + Inter (tipografia)
+    - Vimeo Player (iframe embed para reprodução do vídeo)
+    - Nenhuma biblioteca JS — código vanilla puro
+=============================================================================
+-->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Selectlar · Apresentação de Imóvel</title>
@@ -18,14 +75,16 @@
 html{scroll-behavior:smooth}
 body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden}
 
-/* HERO */
+/* ── HERO: seção de vídeo em tela cheia ── */
 .hero{position:relative;width:100%;height:100svh;min-height:600px;background:var(--navy);overflow:hidden}
 .hero-video{position:absolute;inset:0;width:100%;height:100%}
 .hero-video iframe{width:100%;height:100%;border:none}
+
+/* Vinhetas para legibilidade do texto sobre o vídeo */
 .hero::before{content:'';position:absolute;top:0;left:0;right:0;height:220px;background:linear-gradient(to bottom,rgba(10,22,44,0.88) 0%,transparent 100%);z-index:2;pointer-events:none}
 .hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:300px;background:linear-gradient(to top,rgba(10,22,44,0.95) 0%,transparent 100%);z-index:2;pointer-events:none}
 
-/* HEADER */
+/* ── HEADER do hero ── */
 .hero-header{position:absolute;top:0;left:0;right:0;z-index:10;padding:24px 32px;display:flex;align-items:center;justify-content:space-between}
 .brand{display:flex;align-items:center;gap:12px;text-decoration:none}
 .brand-gem{width:40px;height:40px;border:1.5px solid var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--gold);backdrop-filter:blur(8px);background:rgba(15,36,68,0.30)}
@@ -34,7 +93,7 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);ove
 .hero-badge{backdrop-filter:blur(8px);background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:32px;padding:8px 18px;font-size:11px;color:rgba(255,255,255,0.70);display:flex;align-items:center;gap:8px}
 .hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0}
 
-/* HERO FOOTER */
+/* ── FOOTER do hero: endereço e preço ── */
 .hero-footer{position:absolute;bottom:0;left:0;right:0;z-index:10;padding:32px;display:flex;align-items:flex-end;justify-content:space-between;gap:20px}
 .hero-rua{font-family:'Cormorant Garamond',serif;font-size:clamp(26px,5vw,48px);font-weight:400;color:#fff;line-height:1.1;letter-spacing:-0.01em}
 .hero-bairro{font-size:13px;color:rgba(255,255,255,0.55);font-weight:300;letter-spacing:0.08em;text-transform:uppercase;margin-top:6px}
@@ -42,21 +101,21 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);ove
 .hero-preco-label{font-size:10px;color:var(--gold);font-weight:500;letter-spacing:0.12em;text-transform:uppercase;display:block;margin-bottom:4px}
 .hero-preco{font-family:'Cormorant Garamond',serif;font-size:clamp(24px,4vw,38px);font-weight:400;color:#fff;letter-spacing:-0.02em;white-space:nowrap}
 
-/* SCROLL */
+/* ── CTA de scroll ── */
 .scroll-cta{position:absolute;bottom:110px;left:50%;transform:translateX(-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;opacity:0.55;transition:opacity 0.2s}
 .scroll-cta:hover{opacity:1}
 .scroll-cta span{font-size:10px;color:#fff;letter-spacing:0.14em;text-transform:uppercase}
 .scroll-arrow{width:22px;height:22px;border-right:1.5px solid rgba(255,255,255,0.6);border-bottom:1.5px solid rgba(255,255,255,0.6);transform:rotate(45deg);animation:bounce 1.6s ease-in-out infinite}
 @keyframes bounce{0%,100%{transform:rotate(45deg) translateY(0)}50%{transform:rotate(45deg) translateY(5px)}}
 
-/* SEÇÃO */
+/* ── SEÇÃO DE DADOS ── */
 .secao{max-width:880px;margin:0 auto;padding:60px 24px 60px}
 .divider{display:flex;align-items:center;gap:16px;margin-bottom:40px}
 .divider-line{flex:1;height:1px;background:var(--line-dark)}
 .divider-gem{width:8px;height:8px;background:var(--gold);transform:rotate(45deg);flex-shrink:0}
 .divider-label{font-size:10px;font-weight:500;color:var(--muted);letter-spacing:0.16em;text-transform:uppercase}
 
-/* GRID CARACTERÍSTICAS */
+/* ── GRID DE CARACTERÍSTICAS ── */
 .chars-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line-dark);border-radius:var(--r);overflow:hidden;border:1px solid var(--line-dark);margin-bottom:16px}
 .char-item{background:var(--cream);padding:26px 22px;display:flex;flex-direction:column;gap:6px;transition:background 0.15s}
 .char-item:hover{background:#fff}
@@ -64,30 +123,30 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);ove
 .char-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.10em}
 .char-detalhe{font-size:12px;color:var(--gold);font-weight:500}
 
-/* CUSTOS */
+/* ── CUSTOS (condomínio e IPTU) ── */
 .custos-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
 .custo-card{background:#fff;border:1px solid var(--line-dark);border-radius:12px;padding:18px 22px;display:flex;justify-content:space-between;align-items:center}
 .custo-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.10em}
 .custo-val{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--navy)}
 
-/* OBS */
+/* ── NOTA DO CORRETOR ── */
 .obs-card{background:var(--navy);border-radius:var(--r);padding:32px;margin-bottom:16px;display:none;position:relative;overflow:hidden}
 .obs-card::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,0.15) 0%,transparent 70%)}
 .obs-eyebrow{font-size:10px;font-weight:500;color:var(--gold);letter-spacing:0.16em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px}
 .obs-eyebrow::before{content:'';width:20px;height:1px;background:var(--gold)}
 .obs-texto{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;font-style:italic;color:rgba(255,255,255,0.90);line-height:1.7;white-space:pre-wrap}
 
-/* SHARE */
+/* ── BOTÃO COMPARTILHAR ── */
 .share-section{max-width:880px;margin:0 auto;padding:0 24px 64px;display:flex;justify-content:center}
 .share-btn{display:inline-flex;align-items:center;gap:12px;background:transparent;border:1px solid var(--line-dark);border-radius:40px;padding:14px 28px;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0.06em;cursor:pointer;transition:all 0.2s}
 .share-btn:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
 .share-icon{width:18px;height:18px;flex-shrink:0}
 
-/* TOAST */
+/* ── TOAST de confirmação de cópia ── */
 .toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;font-size:12px;letter-spacing:0.06em;padding:12px 24px;border-radius:32px;opacity:0;transition:all 0.3s;z-index:999;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-/* CORRETOR */
+/* ── RODAPÉ DO CORRETOR ── */
 .corretor-section{background:var(--navy);padding:48px 24px}
 .corretor-inner{max-width:880px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:32px}
 .corretor-left{display:flex;align-items:center;gap:20px}
@@ -95,10 +154,9 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);ove
 .corretor-nome{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:#fff}
 .corretor-cargo{font-size:11px;color:rgba(255,255,255,0.45);font-weight:300;letter-spacing:0.10em;text-transform:uppercase;margin-top:4px}
 .corretor-marca{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--gold);letter-spacing:0.12em;text-transform:uppercase;opacity:0.80}
-
 footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;color:rgba(255,255,255,0.25);letter-spacing:0.06em}
 
-/* LOADING */
+/* ── TELA DE LOADING ── */
 #loading{position:fixed;inset:0;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;gap:24px;transition:opacity 0.5s}
 .loading-brand{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:var(--gold);letter-spacing:0.20em;text-transform:uppercase}
 .loading-bar{width:120px;height:1px;background:rgba(255,255,255,0.15);position:relative;overflow:hidden;border-radius:2px}
@@ -106,11 +164,12 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
 @keyframes load{0%{left:-100%}100%{left:100%}}
 .loading-sub{font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:0.16em;text-transform:uppercase}
 
-/* ERRO */
+/* ── TELA DE ERRO ── */
 #erro-box{display:none;min-height:100svh;background:var(--navy);align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:40px;text-align:center}
 .erro-titulo{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:rgba(255,255,255,0.80)}
 .erro-msg{font-size:14px;color:rgba(255,255,255,0.40);max-width:400px;line-height:1.6}
 
+/* ── RESPONSIVO MOBILE ── */
 @media(max-width:640px){
   .hero-header{padding:20px}
   .hero-footer{padding:20px;flex-direction:column;align-items:flex-start;gap:12px}
@@ -126,26 +185,33 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
 </head>
 <body>
 
+<!-- Tela de loading exibida enquanto monta o conteúdo -->
 <div id="loading">
   <div class="loading-brand">Selectlar</div>
   <div class="loading-bar"><div class="loading-fill"></div></div>
   <div class="loading-sub">Carregando apresentação</div>
 </div>
 
+<!-- Tela de erro quando nenhum ID é fornecido na URL -->
 <div id="erro-box">
   <div class="loading-brand">Selectlar</div>
   <div class="erro-titulo">Imóvel não encontrado</div>
   <div class="erro-msg" id="erro-msg">Verifique o link recebido ou entre em contato com o corretor.</div>
 </div>
 
+<!-- Toast de confirmação ao copiar link -->
 <div class="toast" id="toast"></div>
 
+<!-- Conteúdo principal — oculto até os dados serem montados -->
 <div id="conteudo" style="display:none">
 
+  <!-- Hero: vídeo em tela cheia com endereço e preço sobrepostos -->
   <section class="hero">
     <div class="hero-video">
+      <!-- controls=1 garante que os controles apareçam no desktop -->
       <iframe id="video-player" src="" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="Vídeo do imóvel"></iframe>
     </div>
+
     <div class="hero-header">
       <a href="https://marcoimoveis.com.br" class="brand">
         <div class="brand-gem">S</div>
@@ -159,10 +225,12 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
         Corretor Parceiro QuintoAndar
       </div>
     </div>
+
     <div class="scroll-cta" onclick="document.getElementById('dados-section').scrollIntoView({behavior:'smooth'})">
       <span>Ver detalhes</span>
       <div class="scroll-arrow"></div>
     </div>
+
     <div class="hero-footer">
       <div>
         <div class="hero-rua" id="hero-rua"></div>
@@ -175,6 +243,7 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
     </div>
   </section>
 
+  <!-- Seção de dados: características, custos e nota do corretor -->
   <section class="secao" id="dados-section">
     <div class="divider">
       <div class="divider-line"></div>
@@ -183,14 +252,21 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
       <div class="divider-gem"></div>
       <div class="divider-line"></div>
     </div>
+
+    <!-- Grid preenchido dinamicamente via JS -->
     <div class="chars-grid" id="chars-grid"></div>
+
+    <!-- Condomínio e IPTU — oculto se não fornecido -->
     <div class="custos-row" id="custos-row" style="display:none"></div>
+
+    <!-- Nota do corretor — oculta se não fornecida via &msg= -->
     <div class="obs-card" id="obs-card">
       <div class="obs-eyebrow">Nota do corretor</div>
       <div class="obs-texto" id="obs-texto"></div>
     </div>
   </section>
 
+  <!-- Botão de compartilhar: Web Share API no celular, copia link no desktop -->
   <div class="share-section">
     <button class="share-btn" onclick="compartilhar()">
       <svg class="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -202,6 +278,7 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
     </button>
   </div>
 
+  <!-- Rodapé com identidade do corretor -->
   <section class="corretor-section">
     <div class="corretor-inner">
       <div class="corretor-left">
@@ -219,112 +296,139 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
 </div>
 
 <script>
-// ─── LÊ PARÂMETROS DA URL ─────────────────────────────────────────────────────
-const p = new URLSearchParams(location.search);
-const imovelId = p.get('id');
-const clipId   = p.get('clipId');
-const hash     = p.get('hash');
-const rua      = p.get('rua');
-const bairro   = p.get('bairro');
-const cidade   = p.get('cidade') || 'Belo Horizonte';
-const uf       = p.get('uf') || 'MG';
-const preco    = p.get('preco');
-const quartos  = p.get('quartos');
-const suites   = p.get('suites');
-const area     = p.get('area');
-const vagas    = p.get('vagas');
-const banheiros= p.get('banheiros');
-const condo    = p.get('condo');
-const iptu     = p.get('iptu');
-const msg      = p.get('msg');
+/*
+  LÓGICA PRINCIPAL:
+  1. Lê todos os parâmetros da URL
+  2. Monta o player do Vimeo com clipId e hash
+  3. Preenche endereço, preço, características e custos
+  4. Exibe nota do corretor se fornecida
+  5. Oculta a tela de loading e exibe o conteúdo
+*/
 
-const fmt = v => v ? 'R$ ' + Number(v).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0}) : null;
+// Leitura dos parâmetros da URL
+const p          = new URLSearchParams(location.search);
+const imovelId   = p.get('id');
+const clipId     = p.get('clipId');
+const hash       = p.get('hash');
+const rua        = p.get('rua');
+const bairro     = p.get('bairro');
+const cidade     = p.get('cidade') || 'Belo Horizonte';
+const uf         = p.get('uf')     || 'MG';
+const preco      = p.get('preco');
+const quartos    = p.get('quartos');
+const suites     = p.get('suites');
+const area       = p.get('area');
+const vagas      = p.get('vagas');
+const banheiros  = p.get('banheiros');
+const condo      = p.get('condo');
+const iptu       = p.get('iptu');
+const msg        = p.get('msg');
 
-function mostrarErro(m){
-  document.getElementById('loading').style.display='none';
-  const b=document.getElementById('erro-box');
-  b.style.display='flex';
-  document.getElementById('erro-msg').textContent=m;
+// Formata número para reais brasileiros
+const fmt = v => v
+  ? 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0})
+  : null;
+
+// Exibe tela de erro
+function mostrarErro(m) {
+  document.getElementById('loading').style.display = 'none';
+  const b = document.getElementById('erro-box');
+  b.style.display = 'flex';
+  document.getElementById('erro-msg').textContent = m;
 }
 
-function ocultarLoading(){
-  const el=document.getElementById('loading');
-  el.style.opacity='0';
-  setTimeout(()=>el.style.display='none',500);
-  document.getElementById('conteudo').style.display='block';
+// Oculta loading e exibe conteúdo com fade
+function ocultarLoading() {
+  const el = document.getElementById('loading');
+  el.style.opacity = '0';
+  setTimeout(() => el.style.display = 'none', 500);
+  document.getElementById('conteudo').style.display = 'block';
 }
 
-function mostrarToast(m){
-  const t=document.getElementById('toast');
-  t.textContent=m;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2800);
+// Toast de confirmação
+function mostrarToast(m) {
+  const t = document.getElementById('toast');
+  t.textContent = m;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
 }
 
-async function compartilhar(){
-  const url=location.href;
-  const titulo=rua||`Imóvel #${imovelId}`;
-  if(navigator.share){
-    try{await navigator.share({title:`${titulo} · Selectlar`,text:`Veja este imóvel: ${titulo}`,url});}catch(e){}
-  }else{
-    try{await navigator.clipboard.writeText(url);mostrarToast('Link copiado! Cole no WhatsApp.');}
-    catch(e){mostrarToast('Copie o link da barra do navegador.');}
+// Compartilhar — Web Share API no celular, copia link no desktop
+async function compartilhar() {
+  const url = location.href;
+  const titulo = rua || `Imóvel #${imovelId}`;
+  if (navigator.share) {
+    try { await navigator.share({ title: `${titulo} · Selectlar`, text: `Veja este imóvel: ${titulo}`, url }); }
+    catch(e) {}
+  } else {
+    try {
+      await navigator.clipboard.writeText(url);
+      mostrarToast('Link copiado! Cole no WhatsApp.');
+    } catch(e) {
+      mostrarToast('Copie o link da barra do navegador.');
+    }
   }
 }
 
-if(!imovelId){
+// Valida se ID foi fornecido
+if (!imovelId) {
   mostrarErro('Nenhum imóvel foi especificado. Verifique o link recebido.');
-}else{
+} else {
   montar();
 }
 
-function montar(){
-  // ── Vídeo ──
-  if(clipId){
-    const src=`https://player.vimeo.com/video/${clipId}?${hash?'h='+hash+'&':''}autoplay=0&title=0&byline=0&portrait=0&dnt=1`;
-    document.getElementById('video-player').src=src;
-  }else{
-    document.querySelector('.hero-video').innerHTML='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><span style="color:rgba(255,255,255,0.25);font-size:14px;letter-spacing:0.1em">Vídeo não disponível</span></div>';
+// Monta toda a página com os dados da URL
+function montar() {
+
+  // Player do Vimeo — controls=1 garante botão de play visível no desktop
+  if (clipId) {
+    const src = `https://player.vimeo.com/video/${clipId}?${hash ? 'h=' + hash + '&' : ''}autoplay=0&controls=1&title=0&byline=0&portrait=0&dnt=1`;
+    document.getElementById('video-player').src = src;
+  } else {
+    document.querySelector('.hero-video').innerHTML =
+      '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><span style="color:rgba(255,255,255,0.25);font-size:14px;letter-spacing:0.1em">Vídeo não disponível</span></div>';
   }
 
-  // ── Endereço e preço ──
+  // Endereço e preço
   document.getElementById('hero-rua').textContent = rua || `Imóvel #${imovelId}`;
-  const loc=[bairro,cidade,uf].filter(Boolean).join(' · ').toUpperCase();
-  document.getElementById('hero-bairro').textContent = loc;
+  document.getElementById('hero-bairro').textContent =
+    [bairro, cidade, uf].filter(Boolean).join(' · ').toUpperCase();
   document.getElementById('hero-preco').textContent = fmt(preco) || 'Consulte';
 
-  // ── Características ──
-  const itens=[
-    quartos && {num:quartos, label:'Quartos', detalhe: suites&&suites>0?`${suites} suíte${suites>1?'s':''}`:''},
-    area    && {num:area,    label:'Área total', detalhe:'metros quadrados'},
-    vagas   && {num:vagas,   label:'Vagas', detalhe:'de garagem'},
-    banheiros&&{num:banheiros,label:'Banheiros', detalhe:''},
+  // Grid de características
+  const itens = [
+    quartos   && { num: quartos,   label: 'Quartos',    detalhe: suites && suites > 0 ? `${suites} suíte${suites > 1 ? 's' : ''}` : '' },
+    area      && { num: area,      label: 'Área total', detalhe: 'metros quadrados' },
+    vagas     && { num: vagas,     label: 'Vagas',      detalhe: 'de garagem' },
+    banheiros && { num: banheiros, label: 'Banheiros',  detalhe: '' },
   ].filter(Boolean);
 
-  const grid=document.getElementById('chars-grid');
-  if(itens.length){
-    grid.innerHTML=itens.map(i=>`
+  const grid = document.getElementById('chars-grid');
+  if (itens.length) {
+    grid.innerHTML = itens.map(i => `
       <div class="char-item">
         <div class="char-num">${i.num}</div>
         <div class="char-label">${i.label}</div>
-        ${i.detalhe?`<div class="char-detalhe">${i.detalhe}</div>`:''}
+        ${i.detalhe ? `<div class="char-detalhe">${i.detalhe}</div>` : ''}
       </div>`).join('');
-  }else{
-    grid.style.display='none';
+  } else {
+    grid.style.display = 'none';
   }
 
-  // ── Custos ──
-  const custos=[];
-  if(condo)custos.push(`<div class="custo-card"><div class="custo-label">Condomínio / mês</div><div class="custo-val">${fmt(condo)}</div></div>`);
-  if(iptu) custos.push(`<div class="custo-card"><div class="custo-label">IPTU / ano</div><div class="custo-val">${fmt(iptu)}</div></div>`);
-  if(custos.length){
-    const row=document.getElementById('custos-row');
-    row.innerHTML=custos.join('');row.style.display='grid';
+  // Custos (condomínio e IPTU)
+  const custos = [];
+  if (condo) custos.push(`<div class="custo-card"><div class="custo-label">Condomínio / mês</div><div class="custo-val">${fmt(condo)}</div></div>`);
+  if (iptu)  custos.push(`<div class="custo-card"><div class="custo-label">IPTU / ano</div><div class="custo-val">${fmt(iptu)}</div></div>`);
+  if (custos.length) {
+    const row = document.getElementById('custos-row');
+    row.innerHTML = custos.join('');
+    row.style.display = 'grid';
   }
 
-  // ── Nota do corretor ──
-  if(msg&&msg.trim()){
-    document.getElementById('obs-texto').textContent=decodeURIComponent(msg).slice(0,500);
-    document.getElementById('obs-card').style.display='block';
+  // Nota do corretor — exibe apenas se &msg= foi fornecido
+  if (msg && msg.trim()) {
+    document.getElementById('obs-texto').textContent = decodeURIComponent(msg).slice(0, 500);
+    document.getElementById('obs-card').style.display = 'block';
   }
 
   ocultarLoading();
