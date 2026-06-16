@@ -1,3 +1,4 @@
+<!-- DATA DE CRIAÇÃO: 16/06/2025 - 23:15 -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -6,8 +7,7 @@
   PROJETO : Selectlar · Vitrine de Vídeo de Imóvel
   ARQUIVO : videoimoveis/index.html
   AUTOR   : Marco Silva · Selectlar · Corretor Parceiro QuintoAndar
-  VERSÃO  : 3.2
-  DATA    : 2025
+  VERSÃO  : 3.3
 
   OBJETIVO:
     Página de apresentação premium de imóvel com vídeo, características
@@ -18,11 +18,13 @@
     Todos os dados chegam via parâmetros na URL (sem chamadas de API).
     A extensão Chrome coleta os dados da página do QuintoAndar e monta
     a URL completa. Esta página apenas lê e exibe.
+    O player de vídeo usa controles customizados via Vimeo Player API
+    pois vídeos unlisted bloqueiam os controles nativos do Vimeo.
 
   PARÂMETROS ACEITOS NA URL:
     ?id        = ID do imóvel no QuintoAndar (obrigatório)
     &clipId    = ID do vídeo no Vimeo
-    &hash      = Hash de segurança do vídeo Vimeo (para vídeos não listados)
+    &hash      = Hash de segurança do vídeo Vimeo (vídeos não listados)
     &rua       = Endereço (rua e número)
     &bairro    = Bairro do imóvel
     &cidade    = Cidade (padrão: Belo Horizonte)
@@ -35,27 +37,16 @@
     &banheiros = Número de banheiros
     &condo     = Valor do condomínio em reais
     &iptu      = Valor do IPTU anual em reais
-    &msg       = Nota/descrição do corretor (máx. 500 caracteres)
-
-  EXEMPLO DE URL:
-    https://marcoimoveis.com.br/videoimoveis/?id=895427382
-      &clipId=1182108531&hash=33baa9d45e
-      &rua=Rua+Professor+Antônio+Márcio,+850
-      &bairro=Palmares&preco=440000
-      &quartos=2&area=62&vagas=1&banheiros=1
-      &condo=296&iptu=960
-      &msg=Excelente+localização
+    &msg       = Nota do corretor (máx. 500 caracteres)
 
   PRÉ-REQUISITOS:
     - Extensão Chrome "Compartilhar Vídeo - QuintoAndar | Selectlar" v3.1+
     - Hospedagem no GitHub Pages em: marcoimoveis.com.br/videoimoveis/
     - Imóvel deve ter vídeo cadastrado no QuintoAndar (Vimeo)
-    - Acesso à internet para carregar fontes Google e player Vimeo
 
   DEPENDÊNCIAS EXTERNAS:
-    - Google Fonts: Cormorant Garamond + Inter (tipografia)
-    - Vimeo Player (iframe embed para reprodução do vídeo)
-    - Nenhuma biblioteca JS — código vanilla puro
+    - Google Fonts: Cormorant Garamond + Inter
+    - Vimeo Player API (https://player.vimeo.com/api/player.js)
 =============================================================================
 -->
 <meta charset="UTF-8"/>
@@ -65,6 +56,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<!-- Vimeo Player API: permite controlar o player via JavaScript -->
+<script src="https://player.vimeo.com/api/player.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -75,16 +68,85 @@
 html{scroll-behavior:smooth}
 body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden}
 
-/* ── HERO: seção de vídeo em tela cheia ── */
+/* ── HERO ── */
 .hero{position:relative;width:100%;height:100svh;min-height:600px;background:var(--navy);overflow:hidden}
 .hero-video{position:absolute;inset:0;width:100%;height:100%}
-.hero-video iframe{width:100%;height:100%;border:none}
+.hero-video iframe{width:100%;height:100%;border:none;pointer-events:none}
 
 /* Vinhetas para legibilidade do texto sobre o vídeo */
 .hero::before{content:'';position:absolute;top:0;left:0;right:0;height:220px;background:linear-gradient(to bottom,rgba(10,22,44,0.88) 0%,transparent 100%);z-index:2;pointer-events:none}
 .hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:300px;background:linear-gradient(to top,rgba(10,22,44,0.95) 0%,transparent 100%);z-index:2;pointer-events:none}
 
-/* ── HEADER do hero ── */
+/* ── CONTROLES CUSTOMIZADOS DO PLAYER ── */
+.player-controls{
+  position:absolute;
+  bottom:0;left:0;right:0;
+  z-index:20;
+  padding:0 32px 140px;
+  display:none; /* oculto até o player carregar */
+}
+
+/* Botão central de play/pause — aparece sobre o vídeo */
+.play-btn-center{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  z-index:20;
+  width:72px;height:72px;
+  border-radius:50%;
+  background:rgba(255,255,255,0.15);
+  backdrop-filter:blur(8px);
+  border:1.5px solid rgba(255,255,255,0.30);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  transition:all 0.2s;
+}
+.play-btn-center:hover{background:rgba(255,255,255,0.25);transform:translate(-50%,-50%) scale(1.08)}
+.play-btn-center svg{width:28px;height:28px;fill:#fff;margin-left:4px}
+.play-btn-center.pausado svg{margin-left:0}
+
+/* Barra de progresso */
+.progress-wrap{
+  width:100%;
+  height:3px;
+  background:rgba(255,255,255,0.20);
+  border-radius:2px;
+  cursor:pointer;
+  margin-bottom:10px;
+  position:relative;
+}
+.progress-fill{
+  height:100%;
+  background:var(--gold);
+  border-radius:2px;
+  width:0%;
+  transition:width 0.3s linear;
+  pointer-events:none;
+}
+
+/* Linha inferior: tempo e mudo */
+.controls-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+}
+.ctrl-time{
+  font-size:12px;
+  color:rgba(255,255,255,0.70);
+  font-weight:400;
+  letter-spacing:0.06em;
+  font-variant-numeric:tabular-nums;
+  min-width:90px;
+}
+.ctrl-mute{
+  background:none;border:none;cursor:pointer;padding:4px;
+  display:flex;align-items:center;
+}
+.ctrl-mute svg{width:18px;height:18px;stroke:#fff;stroke-width:1.8;fill:none;opacity:0.70;transition:opacity 0.15s}
+.ctrl-mute:hover svg{opacity:1}
+
+/* ── HEADER ── */
 .hero-header{position:absolute;top:0;left:0;right:0;z-index:10;padding:24px 32px;display:flex;align-items:center;justify-content:space-between}
 .brand{display:flex;align-items:center;gap:12px;text-decoration:none}
 .brand-gem{width:40px;height:40px;border:1.5px solid var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--gold);backdrop-filter:blur(8px);background:rgba(15,36,68,0.30)}
@@ -93,7 +155,7 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);ove
 .hero-badge{backdrop-filter:blur(8px);background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:32px;padding:8px 18px;font-size:11px;color:rgba(255,255,255,0.70);display:flex;align-items:center;gap:8px}
 .hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0}
 
-/* ── FOOTER do hero: endereço e preço ── */
+/* ── FOOTER DO HERO ── */
 .hero-footer{position:absolute;bottom:0;left:0;right:0;z-index:10;padding:32px;display:flex;align-items:flex-end;justify-content:space-between;gap:20px}
 .hero-rua{font-family:'Cormorant Garamond',serif;font-size:clamp(26px,5vw,48px);font-weight:400;color:#fff;line-height:1.1;letter-spacing:-0.01em}
 .hero-bairro{font-size:13px;color:rgba(255,255,255,0.55);font-weight:300;letter-spacing:0.08em;text-transform:uppercase;margin-top:6px}
@@ -101,7 +163,7 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);ove
 .hero-preco-label{font-size:10px;color:var(--gold);font-weight:500;letter-spacing:0.12em;text-transform:uppercase;display:block;margin-bottom:4px}
 .hero-preco{font-family:'Cormorant Garamond',serif;font-size:clamp(24px,4vw,38px);font-weight:400;color:#fff;letter-spacing:-0.02em;white-space:nowrap}
 
-/* ── CTA de scroll ── */
+/* ── SCROLL CTA ── */
 .scroll-cta{position:absolute;bottom:110px;left:50%;transform:translateX(-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;opacity:0.55;transition:opacity 0.2s}
 .scroll-cta:hover{opacity:1}
 .scroll-cta span{font-size:10px;color:#fff;letter-spacing:0.14em;text-transform:uppercase}
@@ -115,7 +177,7 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);ove
 .divider-gem{width:8px;height:8px;background:var(--gold);transform:rotate(45deg);flex-shrink:0}
 .divider-label{font-size:10px;font-weight:500;color:var(--muted);letter-spacing:0.16em;text-transform:uppercase}
 
-/* ── GRID DE CARACTERÍSTICAS ── */
+/* ── CARACTERÍSTICAS ── */
 .chars-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line-dark);border-radius:var(--r);overflow:hidden;border:1px solid var(--line-dark);margin-bottom:16px}
 .char-item{background:var(--cream);padding:26px 22px;display:flex;flex-direction:column;gap:6px;transition:background 0.15s}
 .char-item:hover{background:#fff}
@@ -123,7 +185,7 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);ove
 .char-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.10em}
 .char-detalhe{font-size:12px;color:var(--gold);font-weight:500}
 
-/* ── CUSTOS (condomínio e IPTU) ── */
+/* ── CUSTOS ── */
 .custos-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
 .custo-card{background:#fff;border:1px solid var(--line-dark);border-radius:12px;padding:18px 22px;display:flex;justify-content:space-between;align-items:center}
 .custo-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.10em}
@@ -142,11 +204,11 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);ove
 .share-btn:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
 .share-icon{width:18px;height:18px;flex-shrink:0}
 
-/* ── TOAST de confirmação de cópia ── */
+/* ── TOAST ── */
 .toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;font-size:12px;letter-spacing:0.06em;padding:12px 24px;border-radius:32px;opacity:0;transition:all 0.3s;z-index:999;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-/* ── RODAPÉ DO CORRETOR ── */
+/* ── CORRETOR ── */
 .corretor-section{background:var(--navy);padding:48px 24px}
 .corretor-inner{max-width:880px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:32px}
 .corretor-left{display:flex;align-items:center;gap:20px}
@@ -156,7 +218,7 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);ove
 .corretor-marca{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--gold);letter-spacing:0.12em;text-transform:uppercase;opacity:0.80}
 footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;color:rgba(255,255,255,0.25);letter-spacing:0.06em}
 
-/* ── TELA DE LOADING ── */
+/* ── LOADING ── */
 #loading{position:fixed;inset:0;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;gap:24px;transition:opacity 0.5s}
 .loading-brand{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:var(--gold);letter-spacing:0.20em;text-transform:uppercase}
 .loading-bar{width:120px;height:1px;background:rgba(255,255,255,0.15);position:relative;overflow:hidden;border-radius:2px}
@@ -164,12 +226,12 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
 @keyframes load{0%{left:-100%}100%{left:100%}}
 .loading-sub{font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:0.16em;text-transform:uppercase}
 
-/* ── TELA DE ERRO ── */
+/* ── ERRO ── */
 #erro-box{display:none;min-height:100svh;background:var(--navy);align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:40px;text-align:center}
 .erro-titulo{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:rgba(255,255,255,0.80)}
 .erro-msg{font-size:14px;color:rgba(255,255,255,0.40);max-width:400px;line-height:1.6}
 
-/* ── RESPONSIVO MOBILE ── */
+/* ── MOBILE ── */
 @media(max-width:640px){
   .hero-header{padding:20px}
   .hero-footer{padding:20px;flex-direction:column;align-items:flex-start;gap:12px}
@@ -180,36 +242,54 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
   .corretor-inner{flex-direction:column;text-align:center;gap:20px}
   .corretor-left{flex-direction:column}
   .scroll-cta{bottom:130px}
+  .player-controls{padding:0 20px 140px}
+  .play-btn-center{width:60px;height:60px}
 }
 </style>
 </head>
 <body>
 
-<!-- Tela de loading exibida enquanto monta o conteúdo -->
 <div id="loading">
   <div class="loading-brand">Selectlar</div>
   <div class="loading-bar"><div class="loading-fill"></div></div>
   <div class="loading-sub">Carregando apresentação</div>
 </div>
 
-<!-- Tela de erro quando nenhum ID é fornecido na URL -->
 <div id="erro-box">
   <div class="loading-brand">Selectlar</div>
   <div class="erro-titulo">Imóvel não encontrado</div>
   <div class="erro-msg" id="erro-msg">Verifique o link recebido ou entre em contato com o corretor.</div>
 </div>
 
-<!-- Toast de confirmação ao copiar link -->
 <div class="toast" id="toast"></div>
 
-<!-- Conteúdo principal — oculto até os dados serem montados -->
 <div id="conteudo" style="display:none">
 
-  <!-- Hero: vídeo em tela cheia com endereço e preço sobrepostos -->
-  <section class="hero">
+  <section class="hero" id="hero-section">
+    <!-- iframe do Vimeo — controlado via Vimeo Player API -->
     <div class="hero-video">
-      <!-- controls=1 garante que os controles apareçam no desktop -->
       <iframe id="video-player" src="" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="Vídeo do imóvel"></iframe>
+    </div>
+
+    <!-- Botão central de play/pause -->
+    <div class="play-btn-center" id="play-btn" onclick="togglePlay()" style="display:none">
+      <svg id="play-icon" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+    </div>
+
+    <!-- Controles na parte inferior -->
+    <div class="player-controls" id="player-controls">
+      <div class="progress-wrap" id="progress-wrap">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <div class="controls-row">
+        <span class="ctrl-time" id="ctrl-time">0:00 / 0:00</span>
+        <button class="ctrl-mute" id="mute-btn" onclick="toggleMute()" title="Silenciar / Ativar som">
+          <svg id="mute-icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path id="volume-path" d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          </svg>
+        </button>
+      </div>
     </div>
 
     <div class="hero-header">
@@ -226,7 +306,7 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
       </div>
     </div>
 
-    <div class="scroll-cta" onclick="document.getElementById('dados-section').scrollIntoView({behavior:'smooth'})">
+    <div class="scroll-cta" id="scroll-cta" onclick="document.getElementById('dados-section').scrollIntoView({behavior:'smooth'})">
       <span>Ver detalhes</span>
       <div class="scroll-arrow"></div>
     </div>
@@ -243,7 +323,6 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
     </div>
   </section>
 
-  <!-- Seção de dados: características, custos e nota do corretor -->
   <section class="secao" id="dados-section">
     <div class="divider">
       <div class="divider-line"></div>
@@ -252,21 +331,14 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
       <div class="divider-gem"></div>
       <div class="divider-line"></div>
     </div>
-
-    <!-- Grid preenchido dinamicamente via JS -->
     <div class="chars-grid" id="chars-grid"></div>
-
-    <!-- Condomínio e IPTU — oculto se não fornecido -->
     <div class="custos-row" id="custos-row" style="display:none"></div>
-
-    <!-- Nota do corretor — oculta se não fornecida via &msg= -->
     <div class="obs-card" id="obs-card">
       <div class="obs-eyebrow">Nota do corretor</div>
       <div class="obs-texto" id="obs-texto"></div>
     </div>
   </section>
 
-  <!-- Botão de compartilhar: Web Share API no celular, copia link no desktop -->
   <div class="share-section">
     <button class="share-btn" onclick="compartilhar()">
       <svg class="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -278,7 +350,6 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
     </button>
   </div>
 
-  <!-- Rodapé com identidade do corretor -->
   <section class="corretor-section">
     <div class="corretor-inner">
       <div class="corretor-left">
@@ -297,15 +368,15 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
 
 <script>
 /*
-  LÓGICA PRINCIPAL:
-  1. Lê todos os parâmetros da URL
-  2. Monta o player do Vimeo com clipId e hash
-  3. Preenche endereço, preço, características e custos
-  4. Exibe nota do corretor se fornecida
-  5. Oculta a tela de loading e exibe o conteúdo
+  LÓGICA DO PLAYER CUSTOMIZADO:
+  - Usa a Vimeo Player API para controlar o iframe via JavaScript
+  - Cria botão de play/pause centralizado com ícone SVG
+  - Barra de progresso com dourado Selectlar
+  - Botão de mudo
+  - Atualiza a barra e o tempo em tempo real via eventos do player
 */
 
-// Leitura dos parâmetros da URL
+// ── Leitura dos parâmetros da URL ──────────────────────────────────────────
 const p          = new URLSearchParams(location.search);
 const imovelId   = p.get('id');
 const clipId     = p.get('clipId');
@@ -324,12 +395,23 @@ const condo      = p.get('condo');
 const iptu       = p.get('iptu');
 const msg        = p.get('msg');
 
-// Formata número para reais brasileiros
+// ── Variáveis do player ─────────────────────────────────────────────────────
+let vimeoPlayer  = null;
+let duracao      = 0;
+let tocando      = false;
+let mutado       = false;
+
+// ── Utilitários ─────────────────────────────────────────────────────────────
 const fmt = v => v
   ? 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0})
   : null;
 
-// Exibe tela de erro
+const fmtTempo = s => {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${sec.toString().padStart(2, '0')}`;
+};
+
 function mostrarErro(m) {
   document.getElementById('loading').style.display = 'none';
   const b = document.getElementById('erro-box');
@@ -337,7 +419,6 @@ function mostrarErro(m) {
   document.getElementById('erro-msg').textContent = m;
 }
 
-// Oculta loading e exibe conteúdo com fade
 function ocultarLoading() {
   const el = document.getElementById('loading');
   el.style.opacity = '0';
@@ -345,7 +426,6 @@ function ocultarLoading() {
   document.getElementById('conteudo').style.display = 'block';
 }
 
-// Toast de confirmação
 function mostrarToast(m) {
   const t = document.getElementById('toast');
   t.textContent = m;
@@ -353,7 +433,7 @@ function mostrarToast(m) {
   setTimeout(() => t.classList.remove('show'), 2800);
 }
 
-// Compartilhar — Web Share API no celular, copia link no desktop
+// ── Compartilhar ────────────────────────────────────────────────────────────
 async function compartilhar() {
   const url = location.href;
   const titulo = rua || `Imóvel #${imovelId}`;
@@ -370,20 +450,121 @@ async function compartilhar() {
   }
 }
 
-// Valida se ID foi fornecido
+// ── Controles do player ─────────────────────────────────────────────────────
+function atualizarIconePlay() {
+  const icon = document.getElementById('play-icon');
+  if (tocando) {
+    // Ícone de pause (duas barras)
+    icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+    document.getElementById('play-btn').classList.add('pausado');
+  } else {
+    // Ícone de play (triângulo)
+    icon.innerHTML = '<polygon points="5,3 19,12 5,21"/>';
+    document.getElementById('play-btn').classList.remove('pausado');
+  }
+}
+
+async function togglePlay() {
+  if (!vimeoPlayer) return;
+  if (tocando) {
+    await vimeoPlayer.pause();
+  } else {
+    await vimeoPlayer.play();
+  }
+}
+
+async function toggleMute() {
+  if (!vimeoPlayer) return;
+  mutado = !mutado;
+  await vimeoPlayer.setMuted(mutado);
+  const path = document.getElementById('volume-path');
+  if (mutado) {
+    // Mostra X para indicar mudo
+    path.setAttribute('d', 'M23 9l-6 6M17 9l6 6');
+  } else {
+    path.setAttribute('d', 'M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07');
+  }
+}
+
+// Clique na barra de progresso para avançar/retroceder
+document.addEventListener('DOMContentLoaded', () => {
+  const pw = document.getElementById('progress-wrap');
+  if (pw) {
+    pw.addEventListener('click', async (e) => {
+      if (!vimeoPlayer || !duracao) return;
+      const rect = pw.getBoundingClientRect();
+      const pct = (e.clientX - rect.left) / rect.width;
+      await vimeoPlayer.setCurrentTime(pct * duracao);
+    });
+  }
+});
+
+// ── Inicialização do player Vimeo ───────────────────────────────────────────
+function iniciarPlayer(cId, h) {
+  const iframe = document.getElementById('video-player');
+
+  // URL sem controls — usamos os controles customizados
+  const src = `https://player.vimeo.com/video/${cId}?${h ? 'h=' + h + '&' : ''}controls=0&title=0&byline=0&portrait=0&dnt=1`;
+  iframe.src = src;
+
+  // Instancia o Vimeo Player via API
+  vimeoPlayer = new Vimeo.Player(iframe);
+
+  // Quando o player estiver pronto
+  vimeoPlayer.ready().then(() => {
+    document.getElementById('play-btn').style.display = 'flex';
+    document.getElementById('player-controls').style.display = 'block';
+    document.getElementById('scroll-cta').style.bottom = '160px';
+
+    // Pega duração total do vídeo
+    vimeoPlayer.getDuration().then(d => {
+      duracao = d;
+      document.getElementById('ctrl-time').textContent = `0:00 / ${fmtTempo(d)}`;
+    });
+  }).catch(() => {
+    // Se a API falhar, mostra controles nativos como fallback
+    iframe.src = iframe.src.replace('controls=0', 'controls=1');
+  });
+
+  // Evento: vídeo tocando
+  vimeoPlayer.on('play', () => {
+    tocando = true;
+    atualizarIconePlay();
+  });
+
+  // Evento: vídeo pausado
+  vimeoPlayer.on('pause', () => {
+    tocando = false;
+    atualizarIconePlay();
+  });
+
+  // Evento: progresso de tempo — atualiza barra e contador
+  vimeoPlayer.on('timeupdate', (data) => {
+    const pct = duracao ? (data.seconds / duracao) * 100 : 0;
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('ctrl-time').textContent =
+      `${fmtTempo(data.seconds)} / ${fmtTempo(duracao)}`;
+  });
+
+  // Evento: vídeo terminou — volta ao início
+  vimeoPlayer.on('ended', () => {
+    tocando = false;
+    atualizarIconePlay();
+    document.getElementById('progress-fill').style.width = '0%';
+  });
+}
+
+// ── Monta a página ──────────────────────────────────────────────────────────
 if (!imovelId) {
   mostrarErro('Nenhum imóvel foi especificado. Verifique o link recebido.');
 } else {
   montar();
 }
 
-// Monta toda a página com os dados da URL
 function montar() {
-
-  // Player do Vimeo — controls=1 garante botão de play visível no desktop
+  // Player de vídeo
   if (clipId) {
-    const src = `https://player.vimeo.com/video/${clipId}?${hash ? 'h=' + hash + '&' : ''}autoplay=0&controls=1&title=0&byline=0&portrait=0&dnt=1`;
-    document.getElementById('video-player').src = src;
+    iniciarPlayer(clipId, hash);
   } else {
     document.querySelector('.hero-video').innerHTML =
       '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><span style="color:rgba(255,255,255,0.25);font-size:14px;letter-spacing:0.1em">Vídeo não disponível</span></div>';
@@ -415,7 +596,7 @@ function montar() {
     grid.style.display = 'none';
   }
 
-  // Custos (condomínio e IPTU)
+  // Custos
   const custos = [];
   if (condo) custos.push(`<div class="custo-card"><div class="custo-label">Condomínio / mês</div><div class="custo-val">${fmt(condo)}</div></div>`);
   if (iptu)  custos.push(`<div class="custo-card"><div class="custo-label">IPTU / ano</div><div class="custo-val">${fmt(iptu)}</div></div>`);
@@ -425,7 +606,7 @@ function montar() {
     row.style.display = 'grid';
   }
 
-  // Nota do corretor — exibe apenas se &msg= foi fornecido
+  // Nota do corretor
   if (msg && msg.trim()) {
     document.getElementById('obs-texto').textContent = decodeURIComponent(msg).slice(0, 500);
     document.getElementById('obs-card').style.display = 'block';
