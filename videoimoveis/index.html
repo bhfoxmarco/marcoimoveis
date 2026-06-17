@@ -1,4 +1,4 @@
-<!-- DATA DE CRIAÇÃO: 17/06/2026 - 14:01 -->
+<!-- DATA DE CRIAÇÃO: 17/06/2026 - 14:44 -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -7,7 +7,7 @@
   PROJETO : Marco Imóveis · Vitrine de Vídeo de Imóvel
   ARQUIVO : videoimoveis/index.html
   AUTOR   : Marco Silva · Corretor Parceiro QuintoAndar
-  VERSÃO  : 4.3
+  VERSÃO  : 4.4
 
   CHANGELOG (últimas 3 versões):
     v4.2 - 17/06/2026: Marca Marco Imóveis, Inter bold, cards elegantes,
@@ -232,6 +232,39 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--cream);color:var(
   letter-spacing:0.01em;
 }
 
+/* ── BOTÃO VITRINE: ver outros imóveis na faixa de preço ── */
+.vitrine-btn{
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  background:linear-gradient(135deg,var(--navy2) 0%,#0f2444 100%);
+  border:1.5px solid var(--gold);
+  border-radius:var(--r);
+  padding:18px 28px;
+  text-decoration:none;
+  color:#fff;
+  font-size:13px;font-weight:700;
+  letter-spacing:0.06em;text-transform:uppercase;
+  cursor:pointer;
+  transition:all 0.2s;
+  width:100%;
+  text-align:center;
+  line-height:1.5;
+  position:relative;
+  overflow:hidden;
+}
+.vitrine-btn::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(201,168,76,0.10) 0%,transparent 100%);
+}
+.vitrine-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(27,58,107,0.35);
+  border-color:var(--gold2);
+}
+.vitrine-btn-icon{font-size:20px;flex-shrink:0}
+.vitrine-btn-texto{display:flex;flex-direction:column;gap:3px;text-align:left}
+.vitrine-btn-titulo{font-size:13px;font-weight:800;color:#fff;letter-spacing:0.04em}
+.vitrine-btn-sub{font-size:11px;font-weight:400;color:var(--gold);letter-spacing:0.06em}
+
 /* ── COMPARTILHAR ── */
 .share-section{max-width:880px;margin:0 auto;padding:0 20px 80px;display:flex;justify-content:center}
 .share-btn{
@@ -430,6 +463,18 @@ footer{background:#060e1c;padding:18px 24px;text-align:center;font-size:11px;fon
       <div class="obs-texto" id="obs-texto"></div>
     </div>
   </section>
+
+  <!-- Botão: ver outros imóveis na vitrine com filtro automático de faixa -->
+  <div class="share-section" id="vitrine-section" style="display:none;margin-bottom:12px">
+    <a class="vitrine-btn" id="vitrine-link" href="#" target="_blank">
+      <span class="vitrine-btn-icon">🏠</span>
+      <span class="vitrine-btn-texto">
+        <span class="vitrine-btn-titulo">Veja outros imóveis nesta faixa de preço</span>
+        <span class="vitrine-btn-sub" id="vitrine-sub">Região Nordeste · BH</span>
+      </span>
+      <span style="font-size:18px;margin-left:auto;color:var(--gold)">›</span>
+    </a>
+  </div>
 
   <div class="share-section">
     <button class="share-btn" onclick="compartilhar()">
@@ -657,6 +702,21 @@ function montar() {
       } else {
         iniciarPlayerDesktop(clipId, hash);
       }
+    }
+
+    // ── Botão vitrine: monta link com filtro ±100k do preço do imóvel ──
+    if (preco) {
+      var precoNum  = parseInt(preco);
+      var minFaixa  = Math.max(0, precoNum - 100000);
+      var maxFaixa  = precoNum + 100000;
+      var vitrineUrl = 'https://marcoimoveis.com.br/vitrinesite/?min=' + minFaixa + '&max=' + maxFaixa;
+      var vitrineLink = document.getElementById('vitrine-link');
+      var vitrineSub  = document.getElementById('vitrine-sub');
+      var vitrineSection = document.getElementById('vitrine-section');
+      if (vitrineLink)  vitrineLink.href = vitrineUrl;
+      if (vitrineSub)   vitrineSub.textContent =
+        'Região Nordeste · R$ ' + (minFaixa/1000).toFixed(0) + 'k – R$ ' + (maxFaixa/1000).toFixed(0) + 'k';
+      if (vitrineSection) vitrineSection.style.display = 'flex';
     }
 
     var ruaEl    = document.getElementById('hero-rua');
