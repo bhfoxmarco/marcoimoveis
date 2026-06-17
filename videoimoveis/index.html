@@ -1,4 +1,4 @@
-<!-- DATA DE CRIAÇÃO: 17/06/2026 - 10:55 -->
+<!-- DATA DE CRIAÇÃO: 17/06/2026 - 11:29 -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -7,7 +7,7 @@
   PROJETO : Selectlar · Vitrine de Vídeo de Imóvel
   ARQUIVO : videoimoveis/index.html
   AUTOR   : Marco Silva · Selectlar · Corretor Parceiro QuintoAndar
-  VERSÃO  : 3.8
+  VERSÃO  : 3.9
 
   OBJETIVO:
     Página de apresentação premium de imóvel com vídeo, características
@@ -364,15 +364,14 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
 
 <script>
 /*
-  LÓGICA DO PLAYER CUSTOMIZADO:
-  - Usa a Vimeo Player API para controlar o iframe via JavaScript
-  - Cria botão de play/pause centralizado com ícone SVG
-  - Barra de progresso com dourado Selectlar
-  - Botão de mudo
-  - Atualiza a barra e o tempo em tempo real via eventos do player
+  LÓGICA PRINCIPAL v3.9:
+  - isMobile definido como variável GLOBAL (era local — causava erro silencioso)
+  - Timeout de segurança garante que loading some mesmo se houver erro
+  - Mobile: botão que abre Vimeo nativo, zero chamadas externas
+  - Desktop: controles customizados via Vimeo Player API carregada dinamicamente
 */
 
-// ── Leitura dos parâmetros da URL ──────────────────────────────────────────
+// Parâmetros da URL
 const p          = new URLSearchParams(location.search);
 const imovelId   = p.get('id');
 const clipId     = p.get('clipId');
@@ -391,288 +390,295 @@ const condo      = p.get('condo');
 const iptu       = p.get('iptu');
 const msg        = p.get('msg');
 
-// ── Variáveis do player ─────────────────────────────────────────────────────
-let vimeoPlayer  = null;
-let duracao      = 0;
-let tocando      = false;
-let mutado       = false;
+// isMobile GLOBAL — evita erro de variável não definida em outras funções
+const isMobile = window.innerWidth <= 768;
 
-// ── Utilitários ─────────────────────────────────────────────────────────────
+let vimeoPlayer = null;
+let duracao     = 0;
+let tocando     = false;
+let mutado      = false;
+
+// Formata valor em reais
 const fmt = v => v
   ? 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0})
   : null;
 
+// Formata segundos em mm:ss
 const fmtTempo = s => {
   const m = Math.floor(s / 60);
   const sec = Math.floor(s % 60);
-  return `${m}:${sec.toString().padStart(2, '0')}`;
+  return m + ':' + (sec < 10 ? '0' : '') + sec;
 };
 
+// Exibe erro na tela
 function mostrarErro(m) {
   document.getElementById('loading').style.display = 'none';
-  const b = document.getElementById('erro-box');
-  b.style.display = 'flex';
+  document.getElementById('erro-box').style.display = 'flex';
   document.getElementById('erro-msg').textContent = m;
 }
 
+// Oculta loading e exibe conteúdo
 function ocultarLoading() {
-  const el = document.getElementById('loading');
+  var el = document.getElementById('loading');
   el.style.opacity = '0';
-  setTimeout(() => el.style.display = 'none', 500);
+  setTimeout(function() { el.style.display = 'none'; }, 500);
   document.getElementById('conteudo').style.display = 'block';
 }
 
+// Toast de confirmação
 function mostrarToast(m) {
-  const t = document.getElementById('toast');
+  var t = document.getElementById('toast');
   t.textContent = m;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2800);
+  setTimeout(function() { t.classList.remove('show'); }, 2800);
 }
 
-// ── Compartilhar ────────────────────────────────────────────────────────────
-async function compartilhar() {
-  const url = location.href;
-  const titulo = rua || `Imóvel #${imovelId}`;
+// Compartilhar via Web Share API ou copia o link
+function compartilhar() {
+  var url = location.href;
+  var titulo = rua || ('Imóvel #' + imovelId);
   if (navigator.share) {
-    try { await navigator.share({ title: `${titulo} · Selectlar`, text: `Veja este imóvel: ${titulo}`, url }); }
-    catch(e) {}
+    navigator.share({ title: titulo + ' · Selectlar', text: 'Veja este imóvel: ' + titulo, url: url });
   } else {
-    try {
-      await navigator.clipboard.writeText(url);
+    navigator.clipboard.writeText(url).then(function() {
       mostrarToast('Link copiado! Cole no WhatsApp.');
-    } catch(e) {
+    }).catch(function() {
       mostrarToast('Copie o link da barra do navegador.');
-    }
+    });
   }
 }
 
-// ── Abre Vimeo no app/browser nativo do celular ─────────────────────────────
+// Abre Vimeo no app/browser nativo (mobile)
 function abrirVimeoNativo() {
   if (window._vimeoUrlNativo) {
     window.open(window._vimeoUrlNativo, '_blank');
   }
 }
 
-// ── Controles do player ─────────────────────────────────────────────────────
+// Controles do player (desktop)
 function atualizarIconePlay() {
-  const icon = document.getElementById('play-icon');
+  var icon = document.getElementById('play-icon');
+  if (!icon) return;
   if (tocando) {
-    // Ícone de pause (duas barras)
     icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
-    document.getElementById('play-btn').classList.add('pausado');
   } else {
-    // Ícone de play (triângulo)
     icon.innerHTML = '<polygon points="5,3 19,12 5,21"/>';
-    document.getElementById('play-btn').classList.remove('pausado');
   }
 }
 
-async function togglePlay() {
+function togglePlay() {
   if (!vimeoPlayer) return;
-  if (tocando) {
-    await vimeoPlayer.pause();
-  } else {
-    await vimeoPlayer.play();
-  }
+  if (tocando) { vimeoPlayer.pause(); } else { vimeoPlayer.play(); }
 }
 
-async function toggleMute() {
+function toggleMute() {
   if (!vimeoPlayer) return;
   mutado = !mutado;
-  await vimeoPlayer.setMuted(mutado);
-  const path = document.getElementById('volume-path');
-  if (mutado) {
-    // Mostra X para indicar mudo
-    path.setAttribute('d', 'M23 9l-6 6M17 9l6 6');
-  } else {
-    path.setAttribute('d', 'M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07');
+  vimeoPlayer.setMuted(mutado);
+  var path = document.getElementById('volume-path');
+  if (path) {
+    path.setAttribute('d', mutado
+      ? 'M23 9l-6 6M17 9l6 6'
+      : 'M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07');
   }
 }
 
-// Clique na barra de progresso para avançar/retroceder
-document.addEventListener('DOMContentLoaded', () => {
-  const pw = document.getElementById('progress-wrap');
-  if (pw) {
-    pw.addEventListener('click', async (e) => {
-      if (!vimeoPlayer || !duracao) return;
-      const rect = pw.getBoundingClientRect();
-      const pct = (e.clientX - rect.left) / rect.width;
-      await vimeoPlayer.setCurrentTime(pct * duracao);
-    });
-  }
-});
-
-// ── Inicialização do player Vimeo ───────────────────────────────────────────
+// Inicializa o player
 function iniciarPlayer(cId, h) {
-  const iframe = document.getElementById('video-player');
-  const isMobile = window.innerWidth <= 768;
-
   if (isMobile) {
-    // CELULAR: sem iframe, sem chamada externa
-    // Mostra botão que abre o Vimeo no app/browser nativo do celular
-    document.getElementById('hero-overlay').style.display = 'none';
-    document.getElementById('video-desktop').style.display = 'none';
-    document.getElementById('video-mobile').style.display = 'block';
+    // MOBILE: sem iframe, sem chamada externa — botão abre Vimeo nativo
+    var overlay = document.getElementById('hero-overlay');
+    var vDesktop = document.getElementById('video-desktop');
+    var vMobile = document.getElementById('video-mobile');
 
-    // Salva URL do Vimeo para abrir ao clicar no botão
+    if (overlay)  overlay.style.display  = 'none';
+    if (vDesktop) vDesktop.style.display = 'none';
+    if (vMobile)  vMobile.style.display  = 'block';
+
     window._vimeoUrlNativo = h
-      ? `https://vimeo.com/${cId}/${h}`
-      : `https://vimeo.com/${cId}`;
+      ? 'https://vimeo.com/' + cId + '/' + h
+      : 'https://vimeo.com/' + cId;
 
-    // Fundo navy com gradiente — sem requisição externa alguma
-    document.getElementById('mobile-thumb-bg').style.background =
-      'linear-gradient(135deg, #0f2444 0%, #1B3A6B 100%)';
+    var thumbEl = document.getElementById('mobile-thumb-bg');
+    if (thumbEl) {
+      thumbEl.style.background = 'linear-gradient(135deg, #0f2444 0%, #1B3A6B 100%)';
+    }
 
-    return; // Não inicializa Player API no mobile — ocultarLoading() chamado em montar()
+    // Mobile não precisa de mais nada — retorna e deixa montar() chamar ocultarLoading()
+    return;
   }
 
-  // DESKTOP: carrega API do Vimeo dinamicamente e inicia player customizado
-  const script = document.createElement('script');
+  // DESKTOP: carrega Vimeo Player API dinamicamente
+  var iframe = document.getElementById('video-player');
+  var script = document.createElement('script');
   script.src = 'https://player.vimeo.com/api/player.js';
-  script.onload = () => {
-    const src = `https://player.vimeo.com/video/${cId}?${h ? 'h=' + h + '&' : ''}controls=0&title=0&byline=0&portrait=0&dnt=1`;
+  script.onload = function() {
+    var src = 'https://player.vimeo.com/video/' + cId + '?' +
+      (h ? 'h=' + h + '&' : '') +
+      'controls=0&title=0&byline=0&portrait=0&dnt=1';
     iframe.src = src;
     vimeoPlayer = new Vimeo.Player(iframe);
-    iniciarEventosPlayer();
+
+    vimeoPlayer.ready().then(function() {
+      var playBtn = document.getElementById('play-btn');
+      var controls = document.getElementById('player-controls');
+      if (playBtn)  playBtn.style.display  = 'flex';
+      if (controls) controls.style.display = 'block';
+
+      vimeoPlayer.getDuration().then(function(d) {
+        duracao = d;
+        var ct = document.getElementById('ctrl-time');
+        if (ct) ct.textContent = '0:00 / ' + fmtTempo(d);
+      });
+
+      // Hover nos controles via overlay
+      var overlay2 = document.getElementById('hero-overlay');
+      var hideTimer = null;
+      if (overlay2) {
+        overlay2.addEventListener('mousemove', function() {
+          if (playBtn) playBtn.classList.add('visivel');
+          if (controls) controls.classList.add('visivel');
+          clearTimeout(hideTimer);
+          hideTimer = setTimeout(function() {
+            if (tocando) {
+              if (playBtn) playBtn.classList.remove('visivel');
+              if (controls) controls.classList.remove('visivel');
+            }
+          }, 3000);
+        });
+      }
+
+      // Clique na barra de progresso
+      var pw = document.getElementById('progress-wrap');
+      if (pw) {
+        pw.addEventListener('click', function(e) {
+          if (!duracao) return;
+          var rect = pw.getBoundingClientRect();
+          vimeoPlayer.setCurrentTime(((e.clientX - rect.left) / rect.width) * duracao);
+        });
+      }
+    }).catch(function() {
+      // Fallback: mostra controls nativos se API falhar
+      if (iframe) iframe.src = iframe.src.replace('controls=0', 'controls=1');
+    });
+
+    vimeoPlayer.on('play', function() {
+      tocando = true;
+      atualizarIconePlay();
+      var pb = document.getElementById('play-btn');
+      if (pb) pb.classList.add('oculto-tocando');
+    });
+
+    vimeoPlayer.on('pause', function() {
+      tocando = false;
+      atualizarIconePlay();
+      var pb = document.getElementById('play-btn');
+      var ct2 = document.getElementById('player-controls');
+      if (pb) { pb.classList.remove('oculto-tocando'); pb.classList.add('visivel'); }
+      if (ct2) ct2.classList.add('visivel');
+    });
+
+    vimeoPlayer.on('timeupdate', function(data) {
+      var pct = duracao ? (data.seconds / duracao) * 100 : 0;
+      var pf = document.getElementById('progress-fill');
+      var ct3 = document.getElementById('ctrl-time');
+      if (pf) pf.style.width = pct + '%';
+      if (ct3) ct3.textContent = fmtTempo(data.seconds) + ' / ' + fmtTempo(duracao);
+    });
+
+    vimeoPlayer.on('ended', function() {
+      tocando = false;
+      atualizarIconePlay();
+      var pf2 = document.getElementById('progress-fill');
+      var pb2 = document.getElementById('play-btn');
+      if (pf2) pf2.style.width = '0%';
+      if (pb2) pb2.classList.remove('oculto-tocando');
+    });
   };
+
+  script.onerror = function() {
+    console.warn('Vimeo API falhou ao carregar');
+  };
+
   document.head.appendChild(script);
 }
 
-function iniciarEventosPlayer() {
-
-  // Quando o player estiver pronto
-  vimeoPlayer.ready().then(() => {
-    if (!isMobile) {
-      // Desktop: ativa controles customizados
-      document.getElementById('play-btn').style.display = 'flex';
-      document.getElementById('player-controls').style.display = 'block';
-
-      // Hover via overlay — mais confiável que CSS hover com iframe
-      const overlay = document.getElementById('hero-overlay');
-      const playBtn = document.getElementById('play-btn');
-      const controls = document.getElementById('player-controls');
-      let hideTimer = null;
-
-      function mostrarControles() {
-        playBtn.classList.add('visivel');
-        controls.classList.add('visivel');
-        clearTimeout(hideTimer);
-        // Esconde após 3 segundos sem mover o mouse
-        hideTimer = setTimeout(() => {
-          if (tocando) {
-            playBtn.classList.remove('visivel');
-            controls.classList.remove('visivel');
-          }
-        }, 3000);
-      }
-
-      overlay.addEventListener('mousemove', mostrarControles);
-      overlay.addEventListener('mouseenter', mostrarControles);
+// Monta a página completa
+function montar() {
+  try {
+    // Player
+    if (clipId) {
+      iniciarPlayer(clipId, hash);
+    } else {
+      var hv = document.getElementById('video-desktop');
+      if (hv) hv.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><span style="color:rgba(255,255,255,0.25);font-size:14px;letter-spacing:0.1em">Vídeo não disponível</span></div>';
     }
 
-    // Pega duração total do vídeo
-    vimeoPlayer.getDuration().then(d => {
-      duracao = d;
-      document.getElementById('ctrl-time').textContent = `0:00 / ${fmtTempo(d)}`;
-    });
-  }).catch(() => {
-    // Se a API falhar, mostra controles nativos como fallback
-    iframe.src = iframe.src.replace('controls=0', 'controls=1');
-  });
+    // Endereço e preço
+    var ruaEl = document.getElementById('hero-rua');
+    var bairroEl = document.getElementById('hero-bairro');
+    var precoEl = document.getElementById('hero-preco');
+    if (ruaEl) ruaEl.textContent = rua || ('Imóvel #' + imovelId);
+    if (bairroEl) bairroEl.textContent = [bairro, cidade, uf].filter(Boolean).join(' · ').toUpperCase();
+    if (precoEl) precoEl.textContent = fmt(preco) || 'Consulte';
 
-  // Evento: vídeo tocando — some o botão central, tela limpa
-  vimeoPlayer.on('play', () => {
-    tocando = true;
-    atualizarIconePlay();
-    document.getElementById('play-btn').classList.add('oculto-tocando');
-  });
+    // Características
+    var itens = [];
+    if (quartos)   itens.push({ num: quartos,   label: 'Quartos',    detalhe: (suites && suites > 0) ? suites + ' suíte' + (suites > 1 ? 's' : '') : '' });
+    if (area)      itens.push({ num: area,       label: 'Área total', detalhe: 'metros quadrados' });
+    if (vagas)     itens.push({ num: vagas,      label: 'Vagas',      detalhe: 'de garagem' });
+    if (banheiros) itens.push({ num: banheiros,  label: 'Banheiros',  detalhe: '' });
 
-  // Evento: vídeo pausado — mostra botão central
-  vimeoPlayer.on('pause', () => {
-    tocando = false;
-    atualizarIconePlay();
-    const playBtn = document.getElementById('play-btn');
-    playBtn.classList.remove('oculto-tocando');
-    playBtn.classList.add('visivel');
-    document.getElementById('player-controls').classList.add('visivel');
-  });
+    var grid = document.getElementById('chars-grid');
+    if (grid) {
+      if (itens.length) {
+        grid.innerHTML = itens.map(function(i) {
+          return '<div class="char-item"><div class="char-num">' + i.num + '</div><div class="char-label">' + i.label + '</div>' + (i.detalhe ? '<div class="char-detalhe">' + i.detalhe + '</div>' : '') + '</div>';
+        }).join('');
+      } else {
+        grid.style.display = 'none';
+      }
+    }
 
-  // Evento: progresso de tempo — atualiza barra e contador
-  vimeoPlayer.on('timeupdate', (data) => {
-    const pct = duracao ? (data.seconds / duracao) * 100 : 0;
-    document.getElementById('progress-fill').style.width = pct + '%';
-    document.getElementById('ctrl-time').textContent =
-      `${fmtTempo(data.seconds)} / ${fmtTempo(duracao)}`;
-  });
+    // Custos
+    var custos = [];
+    if (condo) custos.push('<div class="custo-card"><div class="custo-label">Condomínio / mês</div><div class="custo-val">' + fmt(condo) + '</div></div>');
+    if (iptu)  custos.push('<div class="custo-card"><div class="custo-label">IPTU / ano</div><div class="custo-val">' + fmt(iptu) + '</div></div>');
+    if (custos.length) {
+      var row = document.getElementById('custos-row');
+      if (row) { row.innerHTML = custos.join(''); row.style.display = 'grid'; }
+    }
 
-  // Evento: vídeo terminou — volta ao início
-  vimeoPlayer.on('ended', () => {
-    tocando = false;
-    atualizarIconePlay();
-    document.getElementById('progress-fill').style.width = '0%';
-  });
+    // Nota do corretor
+    if (msg && msg.trim()) {
+      var obsTexto = document.getElementById('obs-texto');
+      var obsCard = document.getElementById('obs-card');
+      if (obsTexto) obsTexto.textContent = decodeURIComponent(msg).slice(0, 500);
+      if (obsCard) obsCard.style.display = 'block';
+    }
+
+  } catch(e) {
+    console.error('Erro em montar():', e);
+  }
+
+  // Oculta loading — sempre, mesmo se houver erro
+  ocultarLoading();
 }
-// fim iniciarEventosPlayer
 
-// ── Monta a página ──────────────────────────────────────────────────────────
+// Timeout de segurança — garante que loading some em até 5 segundos
+setTimeout(function() {
+  var loading = document.getElementById('loading');
+  if (loading && loading.style.display !== 'none') {
+    console.warn('Timeout de segurança ativado — forçando ocultarLoading()');
+    ocultarLoading();
+  }
+}, 5000);
+
+// Inicia
 if (!imovelId) {
   mostrarErro('Nenhum imóvel foi especificado. Verifique o link recebido.');
 } else {
   montar();
-}
-
-function montar() {
-  // Player de vídeo
-  if (clipId) {
-    iniciarPlayer(clipId, hash);
-  } else {
-    document.querySelector('.hero-video').innerHTML =
-      '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><span style="color:rgba(255,255,255,0.25);font-size:14px;letter-spacing:0.1em">Vídeo não disponível</span></div>';
-  }
-
-  // Endereço e preço
-  document.getElementById('hero-rua').textContent = rua || `Imóvel #${imovelId}`;
-  document.getElementById('hero-bairro').textContent =
-    [bairro, cidade, uf].filter(Boolean).join(' · ').toUpperCase();
-  document.getElementById('hero-preco').textContent = fmt(preco) || 'Consulte';
-
-  // Grid de características
-  const itens = [
-    quartos   && { num: quartos,   label: 'Quartos',    detalhe: suites && suites > 0 ? `${suites} suíte${suites > 1 ? 's' : ''}` : '' },
-    area      && { num: area,      label: 'Área total', detalhe: 'metros quadrados' },
-    vagas     && { num: vagas,     label: 'Vagas',      detalhe: 'de garagem' },
-    banheiros && { num: banheiros, label: 'Banheiros',  detalhe: '' },
-  ].filter(Boolean);
-
-  const grid = document.getElementById('chars-grid');
-  if (itens.length) {
-    grid.innerHTML = itens.map(i => `
-      <div class="char-item">
-        <div class="char-num">${i.num}</div>
-        <div class="char-label">${i.label}</div>
-        ${i.detalhe ? `<div class="char-detalhe">${i.detalhe}</div>` : ''}
-      </div>`).join('');
-  } else {
-    grid.style.display = 'none';
-  }
-
-  // Custos
-  const custos = [];
-  if (condo) custos.push(`<div class="custo-card"><div class="custo-label">Condomínio / mês</div><div class="custo-val">${fmt(condo)}</div></div>`);
-  if (iptu)  custos.push(`<div class="custo-card"><div class="custo-label">IPTU / ano</div><div class="custo-val">${fmt(iptu)}</div></div>`);
-  if (custos.length) {
-    const row = document.getElementById('custos-row');
-    row.innerHTML = custos.join('');
-    row.style.display = 'grid';
-  }
-
-  // Nota do corretor
-  if (msg && msg.trim()) {
-    document.getElementById('obs-texto').textContent = decodeURIComponent(msg).slice(0, 500);
-    document.getElementById('obs-card').style.display = 'block';
-  }
-
-  ocultarLoading();
 }
 </script>
 </body>
