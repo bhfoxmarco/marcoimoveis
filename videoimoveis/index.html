@@ -1,23 +1,19 @@
-<!-- DATA DE CRIAÇÃO: 17/06/2026 - 12:26 -->
+<!-- DATA DE CRIAÇÃO: 17/06/2026 - 13:44 -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <!--
 =============================================================================
-  PROJETO : Selectlar · Vitrine de Vídeo de Imóvel
+  PROJETO : Marco Imóveis · Vitrine de Vídeo de Imóvel
   ARQUIVO : videoimoveis/index.html
-  AUTOR   : Marco Silva · Selectlar · Corretor Parceiro QuintoAndar
-  VERSÃO  : 4.1
+  AUTOR   : Marco Silva · Corretor Parceiro QuintoAndar
+  VERSÃO  : 4.2
 
   CHANGELOG (últimas 3 versões):
-    v4.0 - 17/06/2026: Reescrita completa — fix mobile preto, preço correto,
-                       copy automática na descrição, código limpo e estável
-    v3.9 - 17/06/2026: isMobile global, JS sem arrow functions, timeout segurança
-    v3.8 - 17/06/2026: Removido Google Fonts (bloqueava Safari), Vimeo API lazy
-
-  OBJETIVO:
-    Página de apresentação premium de imóvel com vídeo, características
-    e nota do corretor. Gerada pela extensão Chrome "Compartilhar Vídeo".
+    v4.2 - 17/06/2026: Marca Marco Imóveis, Inter bold, cards elegantes,
+                       botão WhatsApp flutuante piscante, cores vibrantes
+    v4.1 - 17/06/2026: iframe embed mobile com playsinline, fix vagas=0
+    v4.0 - 17/06/2026: Reescrita completa, copy automática, código limpo
 
   PARÂMETROS DA URL:
     ?id, &clipId, &hash, &rua, &bairro, &cidade, &uf, &preco,
@@ -26,38 +22,43 @@
 -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Selectlar · Apresentação de Imóvel</title>
-<meta name="description" content="Apresentação exclusiva por Marco Silva · Selectlar · Corretor Parceiro QuintoAndar"/>
+<title>Marco Imóveis · Apresentação de Imóvel</title>
+<meta name="description" content="Apresentação exclusiva por Marco Silva · Corretor Parceiro QuintoAndar"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --navy:#0f2444;--navy2:#1B3A6B;--gold:#C9A84C;--gold2:#e8c97a;
-  --cream:#faf8f4;--ink:#0d1b2a;--muted:#6b7a8d;
-  --line-dark:rgba(15,36,68,0.10);--r:16px;
+  --navy:#0a1628;
+  --navy2:#1B3A6B;
+  --gold:#C9A84C;
+  --gold2:#e8c97a;
+  --cream:#f8f9fc;
+  --ink:#0d1b2a;
+  --muted:#64748b;
+  --line:#e2e8f0;
+  --green:#25D366;
+  --r:16px;
 }
 html{scroll-behavior:smooth}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden}
 
 /* ── HERO ── */
 .hero{position:relative;width:100%;height:100svh;min-height:600px;background:var(--navy);overflow:hidden}
-.hero::before{content:'';position:absolute;top:0;left:0;right:0;height:220px;background:linear-gradient(to bottom,rgba(10,22,44,0.88) 0%,transparent 100%);z-index:2;pointer-events:none}
-.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:300px;background:linear-gradient(to top,rgba(10,22,44,0.95) 0%,transparent 100%);z-index:2;pointer-events:none}
+.hero::before{content:'';position:absolute;top:0;left:0;right:0;height:240px;background:linear-gradient(to bottom,rgba(8,18,38,0.92) 0%,transparent 100%);z-index:2;pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:340px;background:linear-gradient(to top,rgba(8,18,38,0.98) 0%,transparent 100%);z-index:2;pointer-events:none}
 
-/* ── VIDEO DESKTOP ── */
+/* ── VIDEO ── */
 #video-desktop{position:absolute;inset:0;width:100%;height:100%}
 #video-desktop iframe{width:100%;height:100%;border:none;pointer-events:none}
+#video-mobile{position:absolute;inset:0;display:none;background:#0a1628}
+#video-mobile iframe{width:100%;height:100%;border:none}
 
-/* ── VIDEO MOBILE: iframe embed com playsinline ── */
-#video-mobile{
-  position:absolute;inset:0;
-  display:none;
-  background:#0f2444;
-}
-
-/* ── OVERLAY desktop (captura mouse sobre iframe) ── */
+/* ── OVERLAY desktop ── */
 .hero-overlay{position:absolute;inset:0;z-index:5;cursor:pointer;display:none}
 
-/* ── CONTROLES DESKTOP ── */
+/* ── CONTROLES desktop ── */
 .play-btn-center{
   position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
   z-index:20;width:72px;height:72px;border-radius:50%;
@@ -70,175 +71,294 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,san
 .play-btn-center.oculto-tocando{opacity:0!important;pointer-events:none!important}
 .play-btn-center:hover{background:rgba(255,255,255,0.25);transform:translate(-50%,-50%) scale(1.08)}
 .play-btn-center svg{width:28px;height:28px;fill:#fff;margin-left:4px}
-
 .player-controls{
   position:absolute;bottom:0;left:0;right:0;z-index:20;
   padding:0 32px 20px;display:none;opacity:0;transition:opacity 0.3s;
-  background:linear-gradient(to top,rgba(10,22,44,0.70) 0%,transparent 100%);
+  background:linear-gradient(to top,rgba(8,18,38,0.80) 0%,transparent 100%);
 }
 .player-controls.visivel{opacity:1}
 .progress-wrap{width:100%;height:3px;background:rgba(255,255,255,0.20);border-radius:2px;cursor:pointer;margin-bottom:10px}
 .progress-fill{height:100%;background:var(--gold);border-radius:2px;width:0%;transition:width 0.3s linear}
-.controls-row{display:flex;align-items:center;justify-content:space-between;gap:16px}
-.ctrl-time{font-size:12px;color:rgba(255,255,255,0.70);letter-spacing:0.06em;min-width:90px}
+.controls-row{display:flex;align-items:center;justify-content:space-between}
+.ctrl-time{font-size:12px;color:rgba(255,255,255,0.70);font-weight:500;letter-spacing:0.04em;min-width:90px}
 .ctrl-mute{background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center}
 .ctrl-mute svg{width:18px;height:18px;stroke:#fff;stroke-width:1.8;fill:none;opacity:0.70}
-.ctrl-mute:hover svg{opacity:1}
 
 /* ── HEADER ── */
-.hero-header{position:absolute;top:0;left:0;right:0;z-index:10;padding:24px 32px;display:flex;align-items:center;justify-content:space-between}
-.brand{display:flex;align-items:center;gap:12px;text-decoration:none}
-.brand-gem{width:40px;height:40px;border:1.5px solid var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-size:22px;font-weight:600;color:var(--gold);backdrop-filter:blur(8px);background:rgba(15,36,68,0.30)}
-.brand-name{font-family:Georgia,serif;font-size:20px;font-weight:400;color:#fff;letter-spacing:0.08em;text-transform:uppercase}
-.brand-sub{font-size:10px;color:rgba(255,255,255,0.50);letter-spacing:0.14em;text-transform:uppercase;margin-top:2px}
-.hero-badge{backdrop-filter:blur(8px);background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:32px;padding:8px 18px;font-size:11px;color:rgba(255,255,255,0.70);display:flex;align-items:center;gap:8px}
-.hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0}
+.hero-header{position:absolute;top:0;left:0;right:0;z-index:10;padding:22px 28px;display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+
+/* Logo Marco Imóveis — ícone casa + texto */
+.brand-logo{
+  display:flex;align-items:center;gap:10px;
+}
+.brand-icon{
+  width:42px;height:42px;
+  background:linear-gradient(135deg,var(--gold) 0%,var(--gold2) 100%);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  box-shadow:0 4px 12px rgba(201,168,76,0.35);
+}
+.brand-icon svg{width:22px;height:22px;fill:var(--navy);stroke:none}
+.brand-text{display:flex;flex-direction:column}
+.brand-name{font-size:17px;font-weight:800;color:#fff;letter-spacing:-0.02em;line-height:1.1}
+.brand-name span{color:var(--gold)}
+.brand-sub{font-size:10px;font-weight:400;color:rgba(255,255,255,0.45);letter-spacing:0.10em;text-transform:uppercase;margin-top:2px}
+
+.hero-badge{backdrop-filter:blur(8px);background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:32px;padding:7px 16px;font-size:10px;font-weight:600;color:rgba(255,255,255,0.70);display:flex;align-items:center;gap:7px;letter-spacing:0.06em}
+.hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;animation:pulse-dot 2s ease-in-out infinite}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.8)}}
 
 /* ── FOOTER DO HERO ── */
-.hero-footer{position:absolute;bottom:0;left:0;right:0;z-index:10;padding:32px;display:flex;align-items:flex-end;justify-content:space-between;gap:20px}
-.hero-rua{font-family:Georgia,serif;font-size:clamp(26px,5vw,48px);font-weight:400;color:#fff;line-height:1.1;letter-spacing:-0.01em}
-.hero-bairro{font-size:13px;color:rgba(255,255,255,0.55);letter-spacing:0.08em;text-transform:uppercase;margin-top:6px}
+.hero-footer{position:absolute;bottom:0;left:0;right:0;z-index:10;padding:28px 28px 32px;display:flex;align-items:flex-end;justify-content:space-between;gap:20px}
+.hero-rua{font-size:clamp(24px,5vw,46px);font-weight:800;color:#fff;line-height:1.05;letter-spacing:-0.03em}
+.hero-bairro{font-size:12px;font-weight:500;color:rgba(255,255,255,0.50);letter-spacing:0.12em;text-transform:uppercase;margin-top:8px}
 .hero-preco-box{text-align:right;flex-shrink:0}
-.hero-preco-label{font-size:10px;color:var(--gold);font-weight:500;letter-spacing:0.12em;text-transform:uppercase;display:block;margin-bottom:4px}
-.hero-preco{font-family:Georgia,serif;font-size:clamp(24px,4vw,38px);color:#fff;white-space:nowrap}
+.hero-preco-label{font-size:10px;font-weight:600;color:var(--gold);letter-spacing:0.14em;text-transform:uppercase;display:block;margin-bottom:6px}
+.hero-preco{font-size:clamp(22px,4vw,36px);font-weight:800;color:#fff;letter-spacing:-0.02em;white-space:nowrap}
 
 /* ── SCROLL CTA ── */
-.scroll-cta{position:absolute;bottom:110px;left:50%;transform:translateX(-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;opacity:0.55;transition:opacity 0.2s}
-.scroll-cta:hover{opacity:1}
-.scroll-cta span{font-size:10px;color:#fff;letter-spacing:0.14em;text-transform:uppercase}
-.scroll-arrow{width:22px;height:22px;border-right:1.5px solid rgba(255,255,255,0.6);border-bottom:1.5px solid rgba(255,255,255,0.6);transform:rotate(45deg);animation:bounce 1.6s ease-in-out infinite}
-@keyframes bounce{0%,100%{transform:rotate(45deg) translateY(0)}50%{transform:rotate(45deg) translateY(5px)}}
+.scroll-cta{
+  position:absolute;bottom:120px;left:50%;transform:translateX(-50%);
+  z-index:10;display:flex;flex-direction:column;align-items:center;gap:6px;
+  cursor:pointer;
+  background:rgba(255,255,255,0.10);
+  backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,0.20);
+  border-radius:32px;
+  padding:10px 20px 12px;
+  transition:all 0.2s;
+}
+.scroll-cta:hover{background:rgba(255,255,255,0.18)}
+.scroll-cta span{font-size:11px;font-weight:700;color:#fff;letter-spacing:0.14em;text-transform:uppercase}
+.scroll-arrow{width:18px;height:18px;border-right:2px solid var(--gold);border-bottom:2px solid var(--gold);transform:rotate(45deg);animation:bounce 1.6s ease-in-out infinite;margin-top:-4px}
+@keyframes bounce{0%,100%{transform:rotate(45deg) translateY(0)}50%{transform:rotate(45deg) translateY(4px)}}
 
 /* ── SEÇÃO DADOS ── */
-.secao{max-width:880px;margin:0 auto;padding:60px 24px 60px}
-.divider{display:flex;align-items:center;gap:16px;margin-bottom:40px}
-.divider-line{flex:1;height:1px;background:var(--line-dark)}
-.divider-gem{width:8px;height:8px;background:var(--gold);transform:rotate(45deg);flex-shrink:0}
-.divider-label{font-size:10px;font-weight:500;color:var(--muted);letter-spacing:0.16em;text-transform:uppercase}
+.secao{max-width:880px;margin:0 auto;padding:56px 20px 56px}
 
-/* ── CARACTERÍSTICAS ── */
-.chars-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line-dark);border-radius:var(--r);overflow:hidden;border:1px solid var(--line-dark);margin-bottom:16px}
-.char-item{background:var(--cream);padding:26px 22px;display:flex;flex-direction:column;gap:6px;transition:background 0.15s}
-.char-item:hover{background:#fff}
-.char-num{font-family:Georgia,serif;font-size:38px;color:var(--navy);line-height:1}
-.char-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.10em}
-.char-detalhe{font-size:12px;color:var(--gold);font-weight:500}
+.secao-titulo{
+  display:flex;align-items:center;gap:14px;margin-bottom:32px;
+}
+.secao-titulo-line{flex:1;height:1px;background:var(--line)}
+.secao-titulo-gem{
+  width:32px;height:32px;border-radius:8px;
+  background:var(--navy2);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.secao-titulo-gem svg{width:16px;height:16px;fill:#fff}
+.secao-titulo-label{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.18em;text-transform:uppercase}
+
+/* ── GRID DE CARACTERÍSTICAS ── */
+.chars-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:12px;
+  margin-bottom:16px;
+}
+.char-item{
+  background:#fff;
+  border-radius:var(--r);
+  padding:24px 20px;
+  border:1.5px solid var(--line);
+  display:flex;flex-direction:column;gap:4px;
+  transition:all 0.2s;
+  position:relative;
+  overflow:hidden;
+}
+.char-item::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;
+  height:3px;
+  background:linear-gradient(90deg,var(--navy2),var(--gold));
+  opacity:0;
+  transition:opacity 0.2s;
+}
+.char-item:hover{border-color:var(--navy2);box-shadow:0 4px 20px rgba(27,58,107,0.10)}
+.char-item:hover::before{opacity:1}
+.char-num{
+  font-size:42px;
+  font-weight:900;
+  color:var(--navy);
+  line-height:1;
+  letter-spacing:-0.04em;
+}
+.char-label{
+  font-size:12px;
+  font-weight:600;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:0.10em;
+  margin-top:2px;
+}
+.char-detalhe{
+  font-size:12px;
+  font-weight:600;
+  color:var(--gold);
+  margin-top:2px;
+}
 
 /* ── CUSTOS ── */
 .custos-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
-.custo-card{background:#fff;border:1px solid var(--line-dark);border-radius:12px;padding:18px 22px;display:flex;justify-content:space-between;align-items:center}
-.custo-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.10em}
-.custo-val{font-family:Georgia,serif;font-size:22px;color:var(--navy)}
+.custo-card{
+  background:#fff;border:1.5px solid var(--line);border-radius:var(--r);
+  padding:18px 22px;display:flex;justify-content:space-between;align-items:center;
+}
+.custo-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.10em}
+.custo-val{font-size:22px;font-weight:800;color:var(--navy);letter-spacing:-0.02em}
 
 /* ── NOTA DO CORRETOR ── */
-.obs-card{background:var(--navy);border-radius:var(--r);padding:32px;margin-bottom:16px;display:none;position:relative;overflow:hidden}
-.obs-card::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,0.15) 0%,transparent 70%)}
-.obs-eyebrow{font-size:10px;font-weight:500;color:var(--gold);letter-spacing:0.16em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px}
-.obs-eyebrow::before{content:'';width:20px;height:1px;background:var(--gold)}
-.obs-texto{font-family:Georgia,serif;font-size:20px;font-style:italic;color:rgba(255,255,255,0.90);line-height:1.7;white-space:pre-wrap}
+.obs-card{
+  background:linear-gradient(135deg,var(--navy) 0%,#1a3560 100%);
+  border-radius:var(--r);padding:32px;margin-bottom:16px;
+  display:none;position:relative;overflow:hidden;
+  border:1px solid rgba(201,168,76,0.20);
+}
+.obs-card::before{content:'';position:absolute;top:-80px;right:-80px;width:250px;height:250px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,0.12) 0%,transparent 70%)}
+.obs-card::after{content:'';position:absolute;bottom:-60px;left:-60px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(27,58,107,0.40) 0%,transparent 70%)}
+.obs-eyebrow{
+  font-size:10px;font-weight:700;color:var(--gold);
+  letter-spacing:0.20em;text-transform:uppercase;
+  margin-bottom:16px;display:flex;align-items:center;gap:10px;
+  position:relative;z-index:1;
+}
+.obs-eyebrow::before{content:'';width:24px;height:2px;background:var(--gold);border-radius:2px}
+.obs-texto{
+  font-size:17px;font-weight:400;font-style:italic;
+  color:rgba(255,255,255,0.88);line-height:1.75;
+  white-space:pre-wrap;position:relative;z-index:1;
+  letter-spacing:0.01em;
+}
 
 /* ── COMPARTILHAR ── */
-.share-section{max-width:880px;margin:0 auto;padding:0 24px 64px;display:flex;justify-content:center}
-.share-btn{display:inline-flex;align-items:center;gap:12px;background:transparent;border:1px solid var(--line-dark);border-radius:40px;padding:14px 28px;font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0.06em;cursor:pointer;transition:all 0.2s}
-.share-btn:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
-.share-icon{width:18px;height:18px;flex-shrink:0}
+.share-section{max-width:880px;margin:0 auto;padding:0 20px 80px;display:flex;justify-content:center}
+.share-btn{
+  display:inline-flex;align-items:center;gap:10px;
+  background:transparent;border:1.5px solid var(--line);
+  border-radius:40px;padding:13px 26px;
+  font-family:'Inter',sans-serif;font-size:13px;font-weight:600;
+  color:var(--muted);letter-spacing:0.04em;cursor:pointer;transition:all 0.2s;
+}
+.share-btn:hover{background:var(--navy2);color:#fff;border-color:var(--navy2)}
+.share-icon{width:17px;height:17px;flex-shrink:0}
+
+/* ── WHATSAPP FLUTUANTE ── */
+.whatsapp-btn{
+  position:fixed;
+  bottom:28px;right:24px;
+  z-index:500;
+  display:flex;align-items:center;gap:10px;
+  background:var(--green);
+  color:#fff;
+  border:2px solid rgba(201,168,76,0.50);
+  border-radius:50px;
+  padding:13px 20px 13px 16px;
+  text-decoration:none;
+  font-size:13px;font-weight:700;
+  letter-spacing:0.04em;
+  box-shadow:0 6px 24px rgba(37,211,102,0.40);
+  animation:pulse-wa 2.5s ease-in-out infinite;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.whatsapp-btn svg{width:22px;height:22px;fill:#fff;flex-shrink:0}
+@keyframes pulse-wa{
+  0%,100%{box-shadow:0 6px 24px rgba(37,211,102,0.40);transform:scale(1)}
+  50%{box-shadow:0 6px 32px rgba(37,211,102,0.65);transform:scale(1.03)}
+}
 
 /* ── TOAST ── */
-.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;font-size:12px;padding:12px 24px;border-radius:32px;opacity:0;transition:all 0.3s;z-index:999;pointer-events:none;white-space:nowrap}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;font-size:12px;font-weight:500;padding:12px 24px;border-radius:32px;opacity:0;transition:all 0.3s;z-index:999;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* ── CORRETOR ── */
-.corretor-section{background:var(--navy);padding:48px 24px}
+.corretor-section{background:var(--navy);padding:44px 24px}
 .corretor-inner{max-width:880px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:32px}
-.corretor-left{display:flex;align-items:center;gap:20px}
-.corretor-avatar{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-size:26px;color:var(--navy);flex-shrink:0}
-.corretor-nome{font-family:Georgia,serif;font-size:22px;color:#fff}
-.corretor-cargo{font-size:11px;color:rgba(255,255,255,0.45);letter-spacing:0.10em;text-transform:uppercase;margin-top:4px}
-.corretor-marca{font-family:Georgia,serif;font-size:28px;color:var(--gold);letter-spacing:0.12em;text-transform:uppercase;opacity:0.80}
-footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;color:rgba(255,255,255,0.25);letter-spacing:0.06em}
+.corretor-left{display:flex;align-items:center;gap:18px}
+.corretor-avatar{
+  width:56px;height:56px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-weight:800;color:var(--navy);flex-shrink:0;
+}
+.corretor-nome{font-size:18px;font-weight:700;color:#fff;letter-spacing:-0.01em}
+.corretor-cargo{font-size:11px;font-weight:500;color:rgba(255,255,255,0.40);letter-spacing:0.10em;text-transform:uppercase;margin-top:3px}
+.corretor-marca{font-size:13px;font-weight:800;color:var(--gold);letter-spacing:0.04em;text-transform:uppercase}
+footer{background:#060e1c;padding:18px 24px;text-align:center;font-size:11px;font-weight:500;color:rgba(255,255,255,0.20);letter-spacing:0.06em}
 
 /* ── LOADING ── */
-#loading{position:fixed;inset:0;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;gap:24px;transition:opacity 0.5s}
-.loading-brand{font-family:Georgia,serif;font-size:32px;color:var(--gold);letter-spacing:0.20em;text-transform:uppercase}
-.loading-bar{width:120px;height:1px;background:rgba(255,255,255,0.15);position:relative;overflow:hidden;border-radius:2px}
+#loading{position:fixed;inset:0;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;gap:20px;transition:opacity 0.5s}
+.loading-brand{font-size:28px;font-weight:900;color:var(--gold);letter-spacing:-0.02em}
+.loading-brand span{color:#fff}
+.loading-bar{width:120px;height:2px;background:rgba(255,255,255,0.12);position:relative;overflow:hidden;border-radius:2px}
 .loading-fill{position:absolute;top:0;left:-100%;width:100%;height:100%;background:var(--gold);animation:load 1.2s ease-in-out infinite}
 @keyframes load{0%{left:-100%}100%{left:100%}}
-.loading-sub{font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:0.16em;text-transform:uppercase}
+.loading-sub{font-size:11px;font-weight:500;color:rgba(255,255,255,0.30);letter-spacing:0.16em;text-transform:uppercase}
 
 /* ── ERRO ── */
 #erro-box{display:none;min-height:100svh;background:var(--navy);align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:40px;text-align:center}
-.erro-titulo{font-family:Georgia,serif;font-size:32px;color:rgba(255,255,255,0.80)}
+.erro-titulo{font-size:28px;font-weight:800;color:rgba(255,255,255,0.80)}
 .erro-msg{font-size:14px;color:rgba(255,255,255,0.40);max-width:400px;line-height:1.6}
 
 /* ── MOBILE ── */
 @media(max-width:768px){
-  .hero-header{padding:20px}
-  .hero-footer{padding:20px;flex-direction:column;align-items:flex-start;gap:12px}
+  .hero-header{padding:18px}
+  .hero-footer{padding:18px 18px 28px;flex-direction:column;align-items:flex-start;gap:10px}
   .hero-preco-box{text-align:left}
   .hero-badge{display:none}
   .chars-grid{grid-template-columns:repeat(2,1fr)}
   .custos-row{grid-template-columns:1fr}
-  .corretor-inner{flex-direction:column;text-align:center;gap:20px}
+  .corretor-inner{flex-direction:column;text-align:center;gap:16px}
   .corretor-left{flex-direction:column}
-  .scroll-cta{bottom:170px}
-  #video-mobile{display:flex!important}
+  .scroll-cta{bottom:150px}
+  #video-mobile{display:block!important}
   #video-desktop{display:none!important}
-  .hero-overlay{display:none!important}
-  .play-btn-center{display:none!important}
-  .player-controls{display:none!important}
+  .hero-overlay,.play-btn-center,.player-controls{display:none!important}
 }
 </style>
 </head>
 <body>
 
 <div id="loading">
-  <div class="loading-brand">Selectlar</div>
+  <div class="loading-brand">Marco<span>Imóveis</span></div>
   <div class="loading-bar"><div class="loading-fill"></div></div>
   <div class="loading-sub">Carregando apresentação</div>
 </div>
 
 <div id="erro-box">
-  <div class="loading-brand">Selectlar</div>
+  <div class="loading-brand" style="color:var(--gold)">MarcoImóveis</div>
   <div class="erro-titulo">Imóvel não encontrado</div>
   <div class="erro-msg" id="erro-msg">Verifique o link recebido.</div>
 </div>
 
 <div class="toast" id="toast"></div>
 
+<!-- Botão WhatsApp flutuante -->
+<a class="whatsapp-btn" href="https://wa.me/5531987139637?text=Olá+Marco!+Vi+a+apresentação+do+imóvel+e+gostaria+de+mais+informações." target="_blank">
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+  </svg>
+  FALE COMIGO AGORA
+</a>
+
 <div id="conteudo" style="display:none">
 
   <section class="hero">
-
-    <!-- Desktop: iframe Vimeo com controles customizados -->
     <div id="video-desktop">
       <iframe id="video-player" src="" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="Vídeo do imóvel"></iframe>
     </div>
-
-    <!-- Mobile: iframe Vimeo com playsinline para rodar dentro da página -->
     <div id="video-mobile">
-      <iframe id="video-player-mobile" src=""
-        allow="autoplay; fullscreen; picture-in-picture"
-        allowfullscreen
-        playsinline
-        webkit-playsinline
-        title="Vídeo do imóvel"
-        style="width:100%;height:100%;border:none;pointer-events:auto">
-      </iframe>
+      <iframe id="video-player-mobile" src="" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen playsinline webkit-playsinline title="Vídeo do imóvel" style="width:100%;height:100%;border:none"></iframe>
     </div>
 
-    <!-- Overlay desktop para capturar mouse -->
     <div class="hero-overlay" id="hero-overlay" onclick="togglePlay()"></div>
-
-    <!-- Botão play/pause central (desktop) -->
     <div class="play-btn-center" id="play-btn" onclick="togglePlay()">
       <svg id="play-icon" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
     </div>
-
-    <!-- Controles inferiores (desktop) -->
     <div class="player-controls" id="player-controls">
-      <div class="progress-wrap" id="progress-wrap">
-        <div class="progress-fill" id="progress-fill"></div>
-      </div>
+      <div class="progress-wrap" id="progress-wrap"><div class="progress-fill" id="progress-fill"></div></div>
       <div class="controls-row">
         <span class="ctrl-time" id="ctrl-time">0:00 / 0:00</span>
         <button class="ctrl-mute" onclick="toggleMute()">
@@ -252,15 +372,23 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
 
     <div class="hero-header">
       <a href="https://marcoimoveis.com.br" class="brand">
-        <div class="brand-gem">S</div>
-        <div>
-          <div class="brand-name">Selectlar</div>
-          <div class="brand-sub">Marco Silva · Corretor</div>
+        <div class="brand-logo">
+          <div class="brand-icon">
+            <!-- Ícone de casa para Marco Imóveis -->
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/>
+              <path d="M9 21V12h6v9" fill="rgba(10,22,40,0.30)"/>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <div class="brand-name">Marco<span>Imóveis</span></div>
+            <div class="brand-sub">Corretor Parceiro QuintoAndar</div>
+          </div>
         </div>
       </a>
       <div class="hero-badge">
         <div class="hero-badge-dot"></div>
-        Corretor Parceiro QuintoAndar
+        QuintoAndar
       </div>
     </div>
 
@@ -282,15 +410,21 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
   </section>
 
   <section class="secao" id="dados-section">
-    <div class="divider">
-      <div class="divider-line"></div>
-      <div class="divider-gem"></div>
-      <div class="divider-label">Características</div>
-      <div class="divider-gem"></div>
-      <div class="divider-line"></div>
+    <div class="secao-titulo">
+      <div class="secao-titulo-line"></div>
+      <div class="secao-titulo-gem">
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </div>
+      <div class="secao-titulo-label">Características do imóvel</div>
+      <div class="secao-titulo-gem">
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </div>
+      <div class="secao-titulo-line"></div>
     </div>
+
     <div class="chars-grid" id="chars-grid"></div>
     <div class="custos-row" id="custos-row" style="display:none"></div>
+
     <div class="obs-card" id="obs-card">
       <div class="obs-eyebrow">Nota do corretor</div>
       <div class="obs-texto" id="obs-texto"></div>
@@ -299,7 +433,7 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
 
   <div class="share-section">
     <button class="share-btn" onclick="compartilhar()">
-      <svg class="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <svg class="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
         <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
         <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
@@ -317,14 +451,13 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
           <div class="corretor-cargo">Corretor Parceiro QuintoAndar</div>
         </div>
       </div>
-      <div class="corretor-marca">Selectlar</div>
+      <div class="corretor-marca">MarcoImóveis</div>
     </div>
   </section>
-  <footer>© Selectlar · Marco Silva · Corretor Parceiro QuintoAndar · Belo Horizonte, MG</footer>
+  <footer>© Marco Imóveis · Marco Silva · Corretor Parceiro QuintoAndar · Belo Horizonte, MG</footer>
 </div>
 
 <script>
-// Parâmetros da URL
 var p         = new URLSearchParams(location.search);
 var imovelId  = p.get('id');
 var clipId    = p.get('clipId');
@@ -343,39 +476,32 @@ var condo     = p.get('condo')     || '';
 var iptu      = p.get('iptu')      || '';
 var msg       = p.get('msg')       || '';
 
-// isMobile GLOBAL
 var isMobile = window.innerWidth <= 768;
-
-// Player
 var vimeoPlayer = null;
 var duracao = 0;
 var tocando = false;
 var mutado  = false;
 
-// Formata reais
 function fmt(v) {
   if (!v) return '';
   return 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0});
 }
 
-// Formata tempo mm:ss
 function fmtTempo(s) {
   var m = Math.floor(s / 60);
   var sec = Math.floor(s % 60);
   return m + ':' + (sec < 10 ? '0' : '') + sec;
 }
 
-// Gera copy automática com os dados do imóvel
 function gerarCopy() {
   var partes = [];
-  var tipo = 'Imóvel';
-  if (quartos) tipo = quartos + ' quarto' + (quartos > 1 ? 's' : '');
+  var tipo = quartos ? quartos + ' quarto' + (parseInt(quartos) > 1 ? 's' : '') : 'Imóvel';
   var local = bairro ? 'no bairro ' + bairro + ', em ' + cidade : 'em ' + cidade;
-  partes.push(tipo + ' de ' + (area ? area + 'm² ' : '') + local + '.');
+  partes.push(tipo + (area ? ' de ' + area + 'm²' : '') + ' ' + local + '.');
   var extras = [];
-  if (suites && suites > 0) extras.push(suites + ' suíte' + (suites > 1 ? 's' : ''));
-  if (vagas)     extras.push(vagas + ' vaga' + (vagas > 1 ? 's' : '') + ' de garagem');
-  if (banheiros) extras.push(banheiros + ' banheiro' + (banheiros > 1 ? 's' : ''));
+  if (suites && parseInt(suites) > 0) extras.push(suites + ' suíte' + (parseInt(suites) > 1 ? 's' : ''));
+  if (vagas  && parseInt(vagas)  > 0) extras.push(vagas  + ' vaga'  + (parseInt(vagas)  > 1 ? 's' : '') + ' de garagem');
+  if (banheiros && parseInt(banheiros) > 0) extras.push(banheiros + ' banheiro' + (parseInt(banheiros) > 1 ? 's' : ''));
   if (extras.length) partes.push('Com ' + extras.join(', ') + '.');
   if (condo) partes.push('Condomínio: ' + fmt(condo) + '/mês.');
   if (preco) partes.push('Valor de venda: ' + fmt(preco) + '.');
@@ -407,7 +533,7 @@ function compartilhar() {
   var url = location.href;
   var titulo = rua || ('Imóvel #' + imovelId);
   if (navigator.share) {
-    navigator.share({title: titulo + ' · Selectlar', text: 'Veja este imóvel: ' + titulo, url: url});
+    navigator.share({title: titulo + ' · Marco Imóveis', text: 'Veja este imóvel: ' + titulo, url: url});
   } else {
     navigator.clipboard.writeText(url).then(function() {
       mostrarToast('Link copiado! Cole no WhatsApp.');
@@ -417,7 +543,6 @@ function compartilhar() {
   }
 }
 
-// Controles desktop
 function atualizarIconePlay() {
   var icon = document.getElementById('play-icon');
   if (!icon) return;
@@ -441,26 +566,23 @@ function toggleMute() {
     : 'M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07');
 }
 
-// Inicia player desktop via Vimeo API carregada dinamicamente
 function iniciarPlayerDesktop(cId, h) {
   var iframe = document.getElementById('video-player');
   var src = 'https://player.vimeo.com/video/' + cId + '?' +
-    (h ? 'h=' + h + '&' : '') +
-    'controls=0&title=0&byline=0&portrait=0&dnt=1';
+    (h ? 'h=' + h + '&' : '') + 'controls=0&title=0&byline=0&portrait=0&dnt=1';
   iframe.src = src;
 
   var script = document.createElement('script');
   script.src = 'https://player.vimeo.com/api/player.js';
   script.onload = function() {
     vimeoPlayer = new Vimeo.Player(iframe);
-
     vimeoPlayer.ready().then(function() {
       var playBtn  = document.getElementById('play-btn');
       var controls = document.getElementById('player-controls');
       var overlay  = document.getElementById('hero-overlay');
-      if (playBtn)  { playBtn.style.display  = 'flex'; }
-      if (controls) { controls.style.display = 'block'; }
-      if (overlay)  { overlay.style.display  = 'block'; }
+      if (playBtn)  playBtn.style.display  = 'flex';
+      if (controls) controls.style.display = 'block';
+      if (overlay)  overlay.style.display  = 'block';
 
       vimeoPlayer.getDuration().then(function(d) {
         duracao = d;
@@ -468,7 +590,6 @@ function iniciarPlayerDesktop(cId, h) {
         if (ct) ct.textContent = '0:00 / ' + fmtTempo(d);
       });
 
-      // Hover via overlay
       var hideTimer = null;
       if (overlay) {
         overlay.addEventListener('mousemove', function() {
@@ -484,7 +605,6 @@ function iniciarPlayerDesktop(cId, h) {
         });
       }
 
-      // Clique na barra de progresso
       var pw = document.getElementById('progress-wrap');
       if (pw) {
         pw.addEventListener('click', function(e) {
@@ -493,8 +613,6 @@ function iniciarPlayerDesktop(cId, h) {
           vimeoPlayer.setCurrentTime(((e.clientX - rect.left) / rect.width) * duracao);
         });
       }
-    }).catch(function(err) {
-      console.warn('Vimeo ready() falhou:', err);
     });
 
     vimeoPlayer.on('play', function() {
@@ -502,102 +620,80 @@ function iniciarPlayerDesktop(cId, h) {
       var pb = document.getElementById('play-btn');
       if (pb) pb.classList.add('oculto-tocando');
     });
-
     vimeoPlayer.on('pause', function() {
       tocando = false; atualizarIconePlay();
       var pb = document.getElementById('play-btn');
-      var ct2 = document.getElementById('player-controls');
-      if (pb)  { pb.classList.remove('oculto-tocando'); pb.classList.add('visivel'); }
-      if (ct2) ct2.classList.add('visivel');
+      var ct = document.getElementById('player-controls');
+      if (pb) { pb.classList.remove('oculto-tocando'); pb.classList.add('visivel'); }
+      if (ct) ct.classList.add('visivel');
     });
-
     vimeoPlayer.on('timeupdate', function(data) {
       var pct = duracao ? (data.seconds / duracao) * 100 : 0;
-      var pf  = document.getElementById('progress-fill');
-      var ct3 = document.getElementById('ctrl-time');
-      if (pf)  pf.style.width = pct + '%';
-      if (ct3) ct3.textContent = fmtTempo(data.seconds) + ' / ' + fmtTempo(duracao);
+      var pf = document.getElementById('progress-fill');
+      var ct = document.getElementById('ctrl-time');
+      if (pf) pf.style.width = pct + '%';
+      if (ct) ct.textContent = fmtTempo(data.seconds) + ' / ' + fmtTempo(duracao);
     });
-
     vimeoPlayer.on('ended', function() {
       tocando = false; atualizarIconePlay();
-      var pf2 = document.getElementById('progress-fill');
-      var pb2 = document.getElementById('play-btn');
-      if (pf2) pf2.style.width = '0%';
-      if (pb2) pb2.classList.remove('oculto-tocando');
+      var pf = document.getElementById('progress-fill');
+      var pb = document.getElementById('play-btn');
+      if (pf) pf.style.width = '0%';
+      if (pb) pb.classList.remove('oculto-tocando');
     });
   };
-
-  script.onerror = function() { console.warn('Falha ao carregar Vimeo API'); };
   document.head.appendChild(script);
 }
 
-// Monta a página
 function montar() {
   try {
-    // Vídeo
     if (clipId) {
-      if (!isMobile) {
+      if (isMobile) {
+        var mf = document.getElementById('video-player-mobile');
+        if (mf) mf.src = 'https://player.vimeo.com/video/' + clipId + '?' +
+          (hash ? 'h=' + hash + '&' : '') +
+          'controls=1&title=0&byline=0&portrait=0&playsinline=1&dnt=1';
+      } else {
         iniciarPlayerDesktop(clipId, hash);
       }
-      // Mobile: seta src do iframe com playsinline para rodar dentro da página
-    if (isMobile) {
-      var mobileIframe = document.getElementById('video-player-mobile');
-      if (mobileIframe) {
-        mobileIframe.src = 'https://player.vimeo.com/video/' + clipId +
-          '?' + (hash ? 'h=' + hash + '&' : '') +
-          'controls=1&title=0&byline=0&portrait=0&playsinline=1&dnt=1';
-      }
-    }
     }
 
-    // Endereço e preço
     var ruaEl    = document.getElementById('hero-rua');
     var bairroEl = document.getElementById('hero-bairro');
     var precoEl  = document.getElementById('hero-preco');
-    if (ruaEl)    ruaEl.textContent    = rua    || ('Imóvel #' + imovelId);
+    if (ruaEl)    ruaEl.textContent    = rua || ('Imóvel #' + imovelId);
     if (bairroEl) bairroEl.textContent = [bairro, cidade, uf].filter(function(x){return x;}).join(' · ').toUpperCase();
     if (precoEl)  precoEl.textContent  = fmt(preco) || 'Consulte';
 
-    // Características
     var itens = [];
-    if (quartos)   itens.push({num: quartos,   label: 'Quartos',    detalhe: (suites && suites > 0) ? suites + ' suíte' + (suites > 1 ? 's' : '') : ''});
-    if (area)      itens.push({num: area,       label: 'Área total', detalhe: 'metros quadrados'});
-    if (vagas)     itens.push({num: vagas,      label: 'Vagas',      detalhe: 'de garagem'});
-    if (banheiros) itens.push({num: banheiros,  label: 'Banheiros',  detalhe: ''});
+    if (quartos)   itens.push({num:quartos,   label:'Quartos',    detalhe:(suites && parseInt(suites)>0) ? suites+' suíte'+(parseInt(suites)>1?'s':'') : ''});
+    if (area)      itens.push({num:area,       label:'Área total', detalhe:'metros quadrados'});
+    if (vagas && parseInt(vagas)>0) itens.push({num:vagas, label:'Vagas', detalhe:'de garagem'});
+    if (banheiros) itens.push({num:banheiros,  label:'Banheiros',  detalhe:''});
 
     var grid = document.getElementById('chars-grid');
     if (grid) {
       if (itens.length) {
         grid.innerHTML = itens.map(function(i) {
-          return '<div class="char-item"><div class="char-num">' + i.num +
-            '</div><div class="char-label">' + i.label + '</div>' +
-            (i.detalhe ? '<div class="char-detalhe">' + i.detalhe + '</div>' : '') +
-            '</div>';
+          return '<div class="char-item"><div class="char-num">'+i.num+'</div><div class="char-label">'+i.label+'</div>'+(i.detalhe?'<div class="char-detalhe">'+i.detalhe+'</div>':'')+'</div>';
         }).join('');
-      } else {
-        grid.style.display = 'none';
-      }
+      } else { grid.style.display='none'; }
     }
 
-    // Custos
     var custos = [];
-    if (condo) custos.push('<div class="custo-card"><div class="custo-label">Condomínio / mês</div><div class="custo-val">' + fmt(condo) + '</div></div>');
-    if (iptu)  custos.push('<div class="custo-card"><div class="custo-label">IPTU / ano</div><div class="custo-val">' + fmt(iptu) + '</div></div>');
+    if (condo) custos.push('<div class="custo-card"><div class="custo-label">Condomínio / mês</div><div class="custo-val">'+fmt(condo)+'</div></div>');
+    if (iptu)  custos.push('<div class="custo-card"><div class="custo-label">IPTU / ano</div><div class="custo-val">'+fmt(iptu)+'</div></div>');
     if (custos.length) {
       var row = document.getElementById('custos-row');
-      if (row) { row.innerHTML = custos.join(''); row.style.display = 'grid'; }
+      if (row) { row.innerHTML=custos.join(''); row.style.display='grid'; }
     }
 
-    // Nota do corretor — usa msg customizada ou gera copy automática
     var textoFinal = '';
     if (msg && msg.trim()) {
       textoFinal = decodeURIComponent(msg).slice(0, 500);
     } else if (quartos || area || bairro) {
-      // Gera copy automática quando há dados suficientes
       textoFinal = gerarCopy();
     }
-
     if (textoFinal) {
       var obsTexto = document.getElementById('obs-texto');
       var obsCard  = document.getElementById('obs-card');
@@ -605,24 +701,19 @@ function montar() {
       if (obsCard)  obsCard.style.display = 'block';
     }
 
-  } catch(e) {
-    console.error('Erro em montar():', e);
-  }
+  } catch(e) { console.error('Erro em montar():', e); }
 
-  // Oculta loading — sempre, mesmo se houver erro
   ocultarLoading();
 }
 
-// Timeout de segurança — loading some em até 5s mesmo se houver erro
+// Timeout de segurança
 setTimeout(function() {
   var loading = document.getElementById('loading');
   if (loading && loading.style.display !== 'none') {
-    console.warn('Timeout de segurança ativado');
     ocultarLoading();
   }
 }, 5000);
 
-// Inicia
 if (!imovelId) {
   mostrarErro('Nenhum imóvel foi especificado. Verifique o link recebido.');
 } else {
