@@ -1,4 +1,4 @@
-<!-- DATA DE CRIAÇÃO: 16/06/2026 - 21:40 -->
+<!-- DATA DE CRIAÇÃO: 17/06/2026 - 10:25 -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -7,7 +7,7 @@
   PROJETO : Selectlar · Vitrine de Vídeo de Imóvel
   ARQUIVO : videoimoveis/index.html
   AUTOR   : Marco Silva · Selectlar · Corretor Parceiro QuintoAndar
-  VERSÃO  : 3.6
+  VERSÃO  : 3.7
 
   OBJETIVO:
     Página de apresentação premium de imóvel com vídeo, características
@@ -511,25 +511,22 @@ function iniciarPlayer(cId, h) {
   const isMobile = window.innerWidth <= 768;
 
   if (isMobile) {
-    // CELULAR: usa iframe separado com controles nativos do Vimeo
-    // Remove o overlay e o iframe desktop
+    // CELULAR: sem iframe, sem chamada externa
+    // Mostra botão que abre o Vimeo no app/browser nativo do celular
     document.getElementById('hero-overlay').style.display = 'none';
     document.getElementById('video-desktop').style.display = 'none';
     document.getElementById('video-mobile').style.display = 'block';
-    const mobileIframe = document.getElementById('video-player-mobile');
-    // transparent=0 e playsinline=1 são necessários para Safari/iPhone
-    // Monta URL do Vimeo para abrir no app/browser nativo
-    window._vimeoUrlNativo = `https://vimeo.com/${cId}${h ? '/' + h : ''}`;
 
-    // Thumbnail via URL estática do Vimeo CDN — sem chamada de API
-    // vumbnail.com é um serviço público que serve thumbnails do Vimeo por clipId
-    const thumbUrl = `https://vumbnail.com/${cId}.jpg`;
-    const thumbEl = document.getElementById('mobile-thumb-bg');
-    thumbEl.style.backgroundImage = `url(${thumbUrl})`;
-    // Fallback: se vumbnail falhar, usa fundo navy escuro (já é o padrão do hero)
-    thumbEl.onerror = () => { thumbEl.style.backgroundImage = 'none'; };
+    // Salva URL do Vimeo para abrir ao clicar no botão
+    window._vimeoUrlNativo = h
+      ? `https://vimeo.com/${cId}/${h}`
+      : `https://vimeo.com/${cId}`;
 
-    return; // Não inicializa Player API no mobile
+    // Fundo navy com gradiente — sem requisição externa alguma
+    document.getElementById('mobile-thumb-bg').style.background =
+      'linear-gradient(135deg, #0f2444 0%, #1B3A6B 100%)';
+
+    return; // Não inicializa Player API no mobile — ocultarLoading() chamado em montar()
   }
 
   // DESKTOP: iframe com controles customizados via Vimeo Player API
