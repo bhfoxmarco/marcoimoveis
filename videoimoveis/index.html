@@ -1,4 +1,4 @@
-<!-- DATA DE CRIAÇÃO: 16/06/2026 - 21:36 -->
+<!-- DATA DE CRIAÇÃO: 16/06/2026 - 21:40 -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -7,7 +7,7 @@
   PROJETO : Selectlar · Vitrine de Vídeo de Imóvel
   ARQUIVO : videoimoveis/index.html
   AUTOR   : Marco Silva · Selectlar · Corretor Parceiro QuintoAndar
-  VERSÃO  : 3.5
+  VERSÃO  : 3.6
 
   OBJETIVO:
     Página de apresentação premium de imóvel com vídeo, características
@@ -521,18 +521,13 @@ function iniciarPlayer(cId, h) {
     // Monta URL do Vimeo para abrir no app/browser nativo
     window._vimeoUrlNativo = `https://vimeo.com/${cId}${h ? '/' + h : ''}`;
 
-    // Busca thumbnail do vídeo via oEmbed API do Vimeo
-    // oEmbed = padrão aberto que retorna metadados incluindo thumbnail
-    fetch(`https://vimeo.com/api/oembed.json?url=https://vimeo.com/${cId}${h ? '/' + h : ''}`)
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data?.thumbnail_url) {
-          // Usa thumbnail em alta resolução substituindo o tamanho
-          const thumb = data.thumbnail_url.replace(/_\d+x\d+/, '_1280x720');
-          document.getElementById('mobile-thumb-bg').style.backgroundImage = `url(${thumb})`;
-        }
-      })
-      .catch(() => {});
+    // Thumbnail via URL estática do Vimeo CDN — sem chamada de API
+    // vumbnail.com é um serviço público que serve thumbnails do Vimeo por clipId
+    const thumbUrl = `https://vumbnail.com/${cId}.jpg`;
+    const thumbEl = document.getElementById('mobile-thumb-bg');
+    thumbEl.style.backgroundImage = `url(${thumbUrl})`;
+    // Fallback: se vumbnail falhar, usa fundo navy escuro (já é o padrão do hero)
+    thumbEl.onerror = () => { thumbEl.style.backgroundImage = 'none'; };
 
     return; // Não inicializa Player API no mobile
   }
