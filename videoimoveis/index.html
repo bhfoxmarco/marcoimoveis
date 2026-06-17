@@ -1,4 +1,4 @@
-<!-- DATA DE CRIAÇÃO: 17/06/2026 - 10:25 -->
+<!-- DATA DE CRIAÇÃO: 17/06/2026 - 10:55 -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -7,7 +7,7 @@
   PROJETO : Selectlar · Vitrine de Vídeo de Imóvel
   ARQUIVO : videoimoveis/index.html
   AUTOR   : Marco Silva · Selectlar · Corretor Parceiro QuintoAndar
-  VERSÃO  : 3.7
+  VERSÃO  : 3.8
 
   OBJETIVO:
     Página de apresentação premium de imóvel com vídeo, características
@@ -53,11 +53,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Selectlar · Apresentação de Imóvel</title>
 <meta name="description" content="Apresentação exclusiva por Marco Silva · Selectlar · Corretor Parceiro QuintoAndar"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-<!-- Vimeo Player API: permite controlar o player via JavaScript -->
-<script src="https://player.vimeo.com/api/player.js"></script>
+<!-- Fontes do sistema — sem chamadas externas para evitar bloqueio do Safari -->
+<!-- Cormorant Garamond substituída por Georgia (serif elegante nativa) -->
+<!-- Inter substituída por -apple-system / Segoe UI (sans-serif nativa) -->
+<!-- Vimeo Player API carregada via JS apenas no desktop, evitando bloqueio no mobile -->
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -66,7 +65,7 @@
   --line-dark:rgba(15,36,68,0.10);--r:16px;
 }
 html{scroll-behavior:smooth}
-body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden}
 
 /* ── HERO ── */
 .hero{position:relative;width:100%;height:100svh;min-height:600px;background:var(--navy);overflow:hidden}
@@ -144,19 +143,19 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);ove
 /* ── HEADER ── */
 .hero-header{position:absolute;top:0;left:0;right:0;z-index:10;padding:24px 32px;display:flex;align-items:center;justify-content:space-between}
 .brand{display:flex;align-items:center;gap:12px;text-decoration:none}
-.brand-gem{width:40px;height:40px;border:1.5px solid var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--gold);backdrop-filter:blur(8px);background:rgba(15,36,68,0.30)}
-.brand-name{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:#fff;letter-spacing:0.08em;text-transform:uppercase}
+.brand-gem{width:40px;height:40px;border:1.5px solid var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:600;color:var(--gold);backdrop-filter:blur(8px);background:rgba(15,36,68,0.30)}
+.brand-name{font-family:Georgia,'Times New Roman',serif;font-size:20px;font-weight:500;color:#fff;letter-spacing:0.08em;text-transform:uppercase}
 .brand-sub{font-size:10px;font-weight:300;color:rgba(255,255,255,0.50);letter-spacing:0.14em;text-transform:uppercase;margin-top:2px}
 .hero-badge{backdrop-filter:blur(8px);background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:32px;padding:8px 18px;font-size:11px;color:rgba(255,255,255,0.70);display:flex;align-items:center;gap:8px}
 .hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0}
 
 /* ── FOOTER DO HERO ── */
 .hero-footer{position:absolute;bottom:0;left:0;right:0;z-index:10;padding:32px;display:flex;align-items:flex-end;justify-content:space-between;gap:20px}
-.hero-rua{font-family:'Cormorant Garamond',serif;font-size:clamp(26px,5vw,48px);font-weight:400;color:#fff;line-height:1.1;letter-spacing:-0.01em}
+.hero-rua{font-family:Georgia,'Times New Roman',serif;font-size:clamp(26px,5vw,48px);font-weight:400;color:#fff;line-height:1.1;letter-spacing:-0.01em}
 .hero-bairro{font-size:13px;color:rgba(255,255,255,0.55);font-weight:300;letter-spacing:0.08em;text-transform:uppercase;margin-top:6px}
 .hero-preco-box{text-align:right;flex-shrink:0}
 .hero-preco-label{font-size:10px;color:var(--gold);font-weight:500;letter-spacing:0.12em;text-transform:uppercase;display:block;margin-bottom:4px}
-.hero-preco{font-family:'Cormorant Garamond',serif;font-size:clamp(24px,4vw,38px);font-weight:400;color:#fff;letter-spacing:-0.02em;white-space:nowrap}
+.hero-preco{font-family:Georgia,'Times New Roman',serif;font-size:clamp(24px,4vw,38px);font-weight:400;color:#fff;letter-spacing:-0.02em;white-space:nowrap}
 
 /* ── SCROLL CTA ── */
 .scroll-cta{position:absolute;bottom:110px;left:50%;transform:translateX(-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;opacity:0.55;transition:opacity 0.2s}
@@ -176,7 +175,7 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);ove
 .chars-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line-dark);border-radius:var(--r);overflow:hidden;border:1px solid var(--line-dark);margin-bottom:16px}
 .char-item{background:var(--cream);padding:26px 22px;display:flex;flex-direction:column;gap:6px;transition:background 0.15s}
 .char-item:hover{background:#fff}
-.char-num{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:400;color:var(--navy);line-height:1;letter-spacing:-0.02em}
+.char-num{font-family:Georgia,'Times New Roman',serif;font-size:38px;font-weight:400;color:var(--navy);line-height:1;letter-spacing:-0.02em}
 .char-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.10em}
 .char-detalhe{font-size:12px;color:var(--gold);font-weight:500}
 
@@ -184,18 +183,18 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);ove
 .custos-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
 .custo-card{background:#fff;border:1px solid var(--line-dark);border-radius:12px;padding:18px 22px;display:flex;justify-content:space-between;align-items:center}
 .custo-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.10em}
-.custo-val{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--navy)}
+.custo-val{font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:400;color:var(--navy)}
 
 /* ── NOTA DO CORRETOR ── */
 .obs-card{background:var(--navy);border-radius:var(--r);padding:32px;margin-bottom:16px;display:none;position:relative;overflow:hidden}
 .obs-card::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,0.15) 0%,transparent 70%)}
 .obs-eyebrow{font-size:10px;font-weight:500;color:var(--gold);letter-spacing:0.16em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px}
 .obs-eyebrow::before{content:'';width:20px;height:1px;background:var(--gold)}
-.obs-texto{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;font-style:italic;color:rgba(255,255,255,0.90);line-height:1.7;white-space:pre-wrap}
+.obs-texto{font-family:Georgia,'Times New Roman',serif;font-size:20px;font-weight:300;font-style:italic;color:rgba(255,255,255,0.90);line-height:1.7;white-space:pre-wrap}
 
 /* ── BOTÃO COMPARTILHAR ── */
 .share-section{max-width:880px;margin:0 auto;padding:0 24px 64px;display:flex;justify-content:center}
-.share-btn{display:inline-flex;align-items:center;gap:12px;background:transparent;border:1px solid var(--line-dark);border-radius:40px;padding:14px 28px;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0.06em;cursor:pointer;transition:all 0.2s}
+.share-btn{display:inline-flex;align-items:center;gap:12px;background:transparent;border:1px solid var(--line-dark);border-radius:40px;padding:14px 28px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0.06em;cursor:pointer;transition:all 0.2s}
 .share-btn:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
 .share-icon{width:18px;height:18px;flex-shrink:0}
 
@@ -207,15 +206,15 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);ove
 .corretor-section{background:var(--navy);padding:48px 24px}
 .corretor-inner{max-width:880px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:32px}
 .corretor-left{display:flex;align-items:center;gap:20px}
-.corretor-avatar{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--navy);flex-shrink:0}
-.corretor-nome{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:#fff}
+.corretor-avatar{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:500;color:var(--navy);flex-shrink:0}
+.corretor-nome{font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:400;color:#fff}
 .corretor-cargo{font-size:11px;color:rgba(255,255,255,0.45);font-weight:300;letter-spacing:0.10em;text-transform:uppercase;margin-top:4px}
-.corretor-marca{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--gold);letter-spacing:0.12em;text-transform:uppercase;opacity:0.80}
+.corretor-marca{font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:300;color:var(--gold);letter-spacing:0.12em;text-transform:uppercase;opacity:0.80}
 footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;color:rgba(255,255,255,0.25);letter-spacing:0.06em}
 
 /* ── LOADING ── */
 #loading{position:fixed;inset:0;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;gap:24px;transition:opacity 0.5s}
-.loading-brand{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:var(--gold);letter-spacing:0.20em;text-transform:uppercase}
+.loading-brand{font-family:Georgia,'Times New Roman',serif;font-size:32px;font-weight:300;color:var(--gold);letter-spacing:0.20em;text-transform:uppercase}
 .loading-bar{width:120px;height:1px;background:rgba(255,255,255,0.15);position:relative;overflow:hidden;border-radius:2px}
 .loading-fill{position:absolute;top:0;left:-100%;width:100%;height:100%;background:var(--gold);animation:load 1.2s ease-in-out infinite}
 @keyframes load{0%{left:-100%}100%{left:100%}}
@@ -223,7 +222,7 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
 
 /* ── ERRO ── */
 #erro-box{display:none;min-height:100svh;background:var(--navy);align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:40px;text-align:center}
-.erro-titulo{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:rgba(255,255,255,0.80)}
+.erro-titulo{font-family:Georgia,'Times New Roman',serif;font-size:32px;font-weight:300;color:rgba(255,255,255,0.80)}
 .erro-msg{font-size:14px;color:rgba(255,255,255,0.40);max-width:400px;line-height:1.6}
 
 /* ── MOBILE ── */
@@ -506,8 +505,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── Inicialização do player Vimeo ───────────────────────────────────────────
 function iniciarPlayer(cId, h) {
   const iframe = document.getElementById('video-player');
-
-  // URL sem controls — usamos os controles customizados
   const isMobile = window.innerWidth <= 768;
 
   if (isMobile) {
@@ -529,12 +526,19 @@ function iniciarPlayer(cId, h) {
     return; // Não inicializa Player API no mobile — ocultarLoading() chamado em montar()
   }
 
-  // DESKTOP: iframe com controles customizados via Vimeo Player API
-  const src = `https://player.vimeo.com/video/${cId}?${h ? 'h=' + h + '&' : ''}controls=0&title=0&byline=0&portrait=0&dnt=1`;
-  iframe.src = src;
+  // DESKTOP: carrega API do Vimeo dinamicamente e inicia player customizado
+  const script = document.createElement('script');
+  script.src = 'https://player.vimeo.com/api/player.js';
+  script.onload = () => {
+    const src = `https://player.vimeo.com/video/${cId}?${h ? 'h=' + h + '&' : ''}controls=0&title=0&byline=0&portrait=0&dnt=1`;
+    iframe.src = src;
+    vimeoPlayer = new Vimeo.Player(iframe);
+    iniciarEventosPlayer();
+  };
+  document.head.appendChild(script);
+}
 
-  // Instancia o Vimeo Player via API
-  vimeoPlayer = new Vimeo.Player(iframe);
+function iniciarEventosPlayer() {
 
   // Quando o player estiver pronto
   vimeoPlayer.ready().then(() => {
@@ -608,6 +612,7 @@ function iniciarPlayer(cId, h) {
     document.getElementById('progress-fill').style.width = '0%';
   });
 }
+// fim iniciarEventosPlayer
 
 // ── Monta a página ──────────────────────────────────────────────────────────
 if (!imovelId) {
