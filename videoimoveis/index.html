@@ -1,4 +1,4 @@
-<!-- DATA DE CRIAÇÃO: 17/06/2026 - 11:29 -->
+<!-- DATA DE CRIAÇÃO: 17/06/2026 - 10:49 -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -7,60 +7,31 @@
   PROJETO : Selectlar · Vitrine de Vídeo de Imóvel
   ARQUIVO : videoimoveis/index.html
   AUTOR   : Marco Silva · Selectlar · Corretor Parceiro QuintoAndar
-  VERSÃO  : 3.9
+  VERSÃO  : 4.0
+
+  CHANGELOG (últimas 3 versões):
+    v4.0 - 17/06/2026: Reescrita completa — fix mobile preto, preço correto,
+                       copy automática na descrição, código limpo e estável
+    v3.9 - 17/06/2026: isMobile global, JS sem arrow functions, timeout segurança
+    v3.8 - 17/06/2026: Removido Google Fonts (bloqueava Safari), Vimeo API lazy
 
   OBJETIVO:
     Página de apresentação premium de imóvel com vídeo, características
-    e nota do corretor. Gerada automaticamente pela extensão Chrome
-    "Compartilhar Vídeo - QuintoAndar | Selectlar".
+    e nota do corretor. Gerada pela extensão Chrome "Compartilhar Vídeo".
 
-  COMO FUNCIONA:
-    Todos os dados chegam via parâmetros na URL (sem chamadas de API).
-    A extensão Chrome coleta os dados da página do QuintoAndar e monta
-    a URL completa. Esta página apenas lê e exibe.
-    O player de vídeo usa controles customizados via Vimeo Player API
-    pois vídeos unlisted bloqueiam os controles nativos do Vimeo.
-
-  PARÂMETROS ACEITOS NA URL:
-    ?id        = ID do imóvel no QuintoAndar (obrigatório)
-    &clipId    = ID do vídeo no Vimeo
-    &hash      = Hash de segurança do vídeo Vimeo (vídeos não listados)
-    &rua       = Endereço (rua e número)
-    &bairro    = Bairro do imóvel
-    &cidade    = Cidade (padrão: Belo Horizonte)
-    &uf        = Estado (padrão: MG)
-    &preco     = Valor de venda em reais (apenas números)
-    &quartos   = Número de quartos
-    &suites    = Número de suítes
-    &area      = Área em m²
-    &vagas     = Número de vagas de garagem
-    &banheiros = Número de banheiros
-    &condo     = Valor do condomínio em reais
-    &iptu      = Valor do IPTU anual em reais
-    &msg       = Nota do corretor (máx. 500 caracteres)
-
-  PRÉ-REQUISITOS:
-    - Extensão Chrome "Compartilhar Vídeo - QuintoAndar | Selectlar" v3.1+
-    - Hospedagem no GitHub Pages em: marcoimoveis.com.br/videoimoveis/
-    - Imóvel deve ter vídeo cadastrado no QuintoAndar (Vimeo)
-
-  DEPENDÊNCIAS EXTERNAS:
-    - Google Fonts: Cormorant Garamond + Inter
-    - Vimeo Player API (https://player.vimeo.com/api/player.js)
+  PARÂMETROS DA URL:
+    ?id, &clipId, &hash, &rua, &bairro, &cidade, &uf, &preco,
+    &quartos, &suites, &area, &vagas, &banheiros, &condo, &iptu, &msg
 =============================================================================
 -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Selectlar · Apresentação de Imóvel</title>
 <meta name="description" content="Apresentação exclusiva por Marco Silva · Selectlar · Corretor Parceiro QuintoAndar"/>
-<!-- Fontes do sistema — sem chamadas externas para evitar bloqueio do Safari -->
-<!-- Cormorant Garamond substituída por Georgia (serif elegante nativa) -->
-<!-- Inter substituída por -apple-system / Segoe UI (sans-serif nativa) -->
-<!-- Vimeo Player API carregada via JS apenas no desktop, evitando bloqueio no mobile -->
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --navy:#0f2444;--gold:#C9A84C;--gold2:#e8c97a;
+  --navy:#0f2444;--navy2:#1B3A6B;--gold:#C9A84C;--gold2:#e8c97a;
   --cream:#faf8f4;--ink:#0d1b2a;--muted:#6b7a8d;
   --line-dark:rgba(15,36,68,0.10);--r:16px;
 }
@@ -69,93 +40,86 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,san
 
 /* ── HERO ── */
 .hero{position:relative;width:100%;height:100svh;min-height:600px;background:var(--navy);overflow:hidden}
-.hero-video{position:absolute;inset:0;width:100%;height:100%}
-.hero-video iframe{width:100%;height:100%;border:none;pointer-events:none}
-
-/* Camada transparente sobre o iframe que captura mouse e toque */
-.hero-overlay{position:absolute;inset:0;z-index:5;cursor:pointer}
-
-/* Vinhetas para legibilidade do texto sobre o vídeo */
 .hero::before{content:'';position:absolute;top:0;left:0;right:0;height:220px;background:linear-gradient(to bottom,rgba(10,22,44,0.88) 0%,transparent 100%);z-index:2;pointer-events:none}
 .hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:300px;background:linear-gradient(to top,rgba(10,22,44,0.95) 0%,transparent 100%);z-index:2;pointer-events:none}
 
-/* ── CONTROLES CUSTOMIZADOS DO PLAYER (apenas desktop) ── */
+/* ── VIDEO DESKTOP ── */
+#video-desktop{position:absolute;inset:0;width:100%;height:100%}
+#video-desktop iframe{width:100%;height:100%;border:none;pointer-events:none}
 
-/* Controles ficam invisíveis por padrão, aparecem via JS no mousemove */
-.player-controls{
-  position:absolute;
-  bottom:0;left:0;right:0;
-  z-index:20;
-  padding:0 32px 20px;
+/* ── VIDEO MOBILE: fundo gradiente + botão play centralizado ── */
+#video-mobile{
+  position:absolute;inset:0;
   display:none;
-  opacity:0;
-  transition:opacity 0.3s;
-  background:linear-gradient(to top,rgba(10,22,44,0.70) 0%,transparent 100%);
+  background:linear-gradient(135deg,#0f2444 0%,#1B3A6B 60%,#0f2444 100%);
+  align-items:center;justify-content:center;
+  cursor:pointer;
 }
-.player-controls.visivel{ opacity:1 }
-
-/* Botão central */
-.play-btn-center{
-  position:absolute;
-  top:50%;left:50%;
-  transform:translate(-50%,-50%);
-  z-index:20;
-  width:72px;height:72px;
+.mobile-play-btn{
+  width:88px;height:88px;
   border-radius:50%;
   background:rgba(255,255,255,0.15);
-  backdrop-filter:blur(8px);
-  border:1.5px solid rgba(255,255,255,0.30);
+  backdrop-filter:blur(12px);
+  border:2px solid rgba(255,255,255,0.35);
   display:flex;align-items:center;justify-content:center;
-  cursor:pointer;
-  opacity:0;
-  transition:all 0.25s;
+  transition:all 0.2s;
 }
-.play-btn-center.visivel{ opacity:1 }
-.play-btn-center.oculto-tocando{ opacity:0!important;pointer-events:none!important }
+.mobile-play-btn:hover{background:rgba(255,255,255,0.25);transform:scale(1.08)}
+.mobile-play-btn svg{width:34px;height:34px;fill:#fff;margin-left:5px}
+.mobile-play-label{
+  position:absolute;bottom:160px;left:50%;transform:translateX(-50%);
+  font-size:12px;color:rgba(255,255,255,0.55);
+  letter-spacing:0.12em;text-transform:uppercase;
+  white-space:nowrap;
+}
+
+/* ── OVERLAY desktop (captura mouse sobre iframe) ── */
+.hero-overlay{position:absolute;inset:0;z-index:5;cursor:pointer;display:none}
+
+/* ── CONTROLES DESKTOP ── */
+.play-btn-center{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:20;width:72px;height:72px;border-radius:50%;
+  background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);
+  border:1.5px solid rgba(255,255,255,0.30);
+  display:none;align-items:center;justify-content:center;
+  cursor:pointer;opacity:0;transition:all 0.25s;
+}
+.play-btn-center.visivel{opacity:1}
+.play-btn-center.oculto-tocando{opacity:0!important;pointer-events:none!important}
 .play-btn-center:hover{background:rgba(255,255,255,0.25);transform:translate(-50%,-50%) scale(1.08)}
 .play-btn-center svg{width:28px;height:28px;fill:#fff;margin-left:4px}
-.play-btn-center.pausado svg{margin-left:0}
 
-/* Barra de progresso */
-.progress-wrap{
-  width:100%;height:3px;
-  background:rgba(255,255,255,0.20);
-  border-radius:2px;cursor:pointer;
-  margin-bottom:10px;position:relative;
+.player-controls{
+  position:absolute;bottom:0;left:0;right:0;z-index:20;
+  padding:0 32px 20px;display:none;opacity:0;transition:opacity 0.3s;
+  background:linear-gradient(to top,rgba(10,22,44,0.70) 0%,transparent 100%);
 }
-.progress-fill{
-  height:100%;background:var(--gold);
-  border-radius:2px;width:0%;
-  transition:width 0.3s linear;pointer-events:none;
-}
+.player-controls.visivel{opacity:1}
+.progress-wrap{width:100%;height:3px;background:rgba(255,255,255,0.20);border-radius:2px;cursor:pointer;margin-bottom:10px}
+.progress-fill{height:100%;background:var(--gold);border-radius:2px;width:0%;transition:width 0.3s linear}
 .controls-row{display:flex;align-items:center;justify-content:space-between;gap:16px}
-.ctrl-time{font-size:12px;color:rgba(255,255,255,0.70);font-weight:400;letter-spacing:0.06em;font-variant-numeric:tabular-nums;min-width:90px}
+.ctrl-time{font-size:12px;color:rgba(255,255,255,0.70);letter-spacing:0.06em;min-width:90px}
 .ctrl-mute{background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center}
-.ctrl-mute svg{width:18px;height:18px;stroke:#fff;stroke-width:1.8;fill:none;opacity:0.70;transition:opacity 0.15s}
+.ctrl-mute svg{width:18px;height:18px;stroke:#fff;stroke-width:1.8;fill:none;opacity:0.70}
 .ctrl-mute:hover svg{opacity:1}
-
-/* ── MOBILE: esconde controles customizados, usa interface nativa do Vimeo ── */
-@media(max-width:768px){
-  .play-btn-center{ display:none!important }
-  .player-controls{ display:none!important }
-}
 
 /* ── HEADER ── */
 .hero-header{position:absolute;top:0;left:0;right:0;z-index:10;padding:24px 32px;display:flex;align-items:center;justify-content:space-between}
 .brand{display:flex;align-items:center;gap:12px;text-decoration:none}
-.brand-gem{width:40px;height:40px;border:1.5px solid var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:600;color:var(--gold);backdrop-filter:blur(8px);background:rgba(15,36,68,0.30)}
-.brand-name{font-family:Georgia,'Times New Roman',serif;font-size:20px;font-weight:500;color:#fff;letter-spacing:0.08em;text-transform:uppercase}
-.brand-sub{font-size:10px;font-weight:300;color:rgba(255,255,255,0.50);letter-spacing:0.14em;text-transform:uppercase;margin-top:2px}
+.brand-gem{width:40px;height:40px;border:1.5px solid var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-size:22px;font-weight:600;color:var(--gold);backdrop-filter:blur(8px);background:rgba(15,36,68,0.30)}
+.brand-name{font-family:Georgia,serif;font-size:20px;font-weight:400;color:#fff;letter-spacing:0.08em;text-transform:uppercase}
+.brand-sub{font-size:10px;color:rgba(255,255,255,0.50);letter-spacing:0.14em;text-transform:uppercase;margin-top:2px}
 .hero-badge{backdrop-filter:blur(8px);background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:32px;padding:8px 18px;font-size:11px;color:rgba(255,255,255,0.70);display:flex;align-items:center;gap:8px}
 .hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0}
 
 /* ── FOOTER DO HERO ── */
 .hero-footer{position:absolute;bottom:0;left:0;right:0;z-index:10;padding:32px;display:flex;align-items:flex-end;justify-content:space-between;gap:20px}
-.hero-rua{font-family:Georgia,'Times New Roman',serif;font-size:clamp(26px,5vw,48px);font-weight:400;color:#fff;line-height:1.1;letter-spacing:-0.01em}
-.hero-bairro{font-size:13px;color:rgba(255,255,255,0.55);font-weight:300;letter-spacing:0.08em;text-transform:uppercase;margin-top:6px}
+.hero-rua{font-family:Georgia,serif;font-size:clamp(26px,5vw,48px);font-weight:400;color:#fff;line-height:1.1;letter-spacing:-0.01em}
+.hero-bairro{font-size:13px;color:rgba(255,255,255,0.55);letter-spacing:0.08em;text-transform:uppercase;margin-top:6px}
 .hero-preco-box{text-align:right;flex-shrink:0}
 .hero-preco-label{font-size:10px;color:var(--gold);font-weight:500;letter-spacing:0.12em;text-transform:uppercase;display:block;margin-bottom:4px}
-.hero-preco{font-family:Georgia,'Times New Roman',serif;font-size:clamp(24px,4vw,38px);font-weight:400;color:#fff;letter-spacing:-0.02em;white-space:nowrap}
+.hero-preco{font-family:Georgia,serif;font-size:clamp(24px,4vw,38px);color:#fff;white-space:nowrap}
 
 /* ── SCROLL CTA ── */
 .scroll-cta{position:absolute;bottom:110px;left:50%;transform:translateX(-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;opacity:0.55;transition:opacity 0.2s}
@@ -164,7 +128,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,san
 .scroll-arrow{width:22px;height:22px;border-right:1.5px solid rgba(255,255,255,0.6);border-bottom:1.5px solid rgba(255,255,255,0.6);transform:rotate(45deg);animation:bounce 1.6s ease-in-out infinite}
 @keyframes bounce{0%,100%{transform:rotate(45deg) translateY(0)}50%{transform:rotate(45deg) translateY(5px)}}
 
-/* ── SEÇÃO DE DADOS ── */
+/* ── SEÇÃO DADOS ── */
 .secao{max-width:880px;margin:0 auto;padding:60px 24px 60px}
 .divider{display:flex;align-items:center;gap:16px;margin-bottom:40px}
 .divider-line{flex:1;height:1px;background:var(--line-dark)}
@@ -175,7 +139,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,san
 .chars-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line-dark);border-radius:var(--r);overflow:hidden;border:1px solid var(--line-dark);margin-bottom:16px}
 .char-item{background:var(--cream);padding:26px 22px;display:flex;flex-direction:column;gap:6px;transition:background 0.15s}
 .char-item:hover{background:#fff}
-.char-num{font-family:Georgia,'Times New Roman',serif;font-size:38px;font-weight:400;color:var(--navy);line-height:1;letter-spacing:-0.02em}
+.char-num{font-family:Georgia,serif;font-size:38px;color:var(--navy);line-height:1}
 .char-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.10em}
 .char-detalhe{font-size:12px;color:var(--gold);font-weight:500}
 
@@ -183,38 +147,38 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,san
 .custos-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
 .custo-card{background:#fff;border:1px solid var(--line-dark);border-radius:12px;padding:18px 22px;display:flex;justify-content:space-between;align-items:center}
 .custo-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.10em}
-.custo-val{font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:400;color:var(--navy)}
+.custo-val{font-family:Georgia,serif;font-size:22px;color:var(--navy)}
 
 /* ── NOTA DO CORRETOR ── */
 .obs-card{background:var(--navy);border-radius:var(--r);padding:32px;margin-bottom:16px;display:none;position:relative;overflow:hidden}
 .obs-card::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,0.15) 0%,transparent 70%)}
 .obs-eyebrow{font-size:10px;font-weight:500;color:var(--gold);letter-spacing:0.16em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px}
 .obs-eyebrow::before{content:'';width:20px;height:1px;background:var(--gold)}
-.obs-texto{font-family:Georgia,'Times New Roman',serif;font-size:20px;font-weight:300;font-style:italic;color:rgba(255,255,255,0.90);line-height:1.7;white-space:pre-wrap}
+.obs-texto{font-family:Georgia,serif;font-size:20px;font-style:italic;color:rgba(255,255,255,0.90);line-height:1.7;white-space:pre-wrap}
 
-/* ── BOTÃO COMPARTILHAR ── */
+/* ── COMPARTILHAR ── */
 .share-section{max-width:880px;margin:0 auto;padding:0 24px 64px;display:flex;justify-content:center}
-.share-btn{display:inline-flex;align-items:center;gap:12px;background:transparent;border:1px solid var(--line-dark);border-radius:40px;padding:14px 28px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0.06em;cursor:pointer;transition:all 0.2s}
+.share-btn{display:inline-flex;align-items:center;gap:12px;background:transparent;border:1px solid var(--line-dark);border-radius:40px;padding:14px 28px;font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0.06em;cursor:pointer;transition:all 0.2s}
 .share-btn:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
 .share-icon{width:18px;height:18px;flex-shrink:0}
 
 /* ── TOAST ── */
-.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;font-size:12px;letter-spacing:0.06em;padding:12px 24px;border-radius:32px;opacity:0;transition:all 0.3s;z-index:999;pointer-events:none;white-space:nowrap}
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;font-size:12px;padding:12px 24px;border-radius:32px;opacity:0;transition:all 0.3s;z-index:999;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* ── CORRETOR ── */
 .corretor-section{background:var(--navy);padding:48px 24px}
 .corretor-inner{max-width:880px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:32px}
 .corretor-left{display:flex;align-items:center;gap:20px}
-.corretor-avatar{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:500;color:var(--navy);flex-shrink:0}
-.corretor-nome{font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:400;color:#fff}
-.corretor-cargo{font-size:11px;color:rgba(255,255,255,0.45);font-weight:300;letter-spacing:0.10em;text-transform:uppercase;margin-top:4px}
-.corretor-marca{font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:300;color:var(--gold);letter-spacing:0.12em;text-transform:uppercase;opacity:0.80}
+.corretor-avatar{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-size:26px;color:var(--navy);flex-shrink:0}
+.corretor-nome{font-family:Georgia,serif;font-size:22px;color:#fff}
+.corretor-cargo{font-size:11px;color:rgba(255,255,255,0.45);letter-spacing:0.10em;text-transform:uppercase;margin-top:4px}
+.corretor-marca{font-family:Georgia,serif;font-size:28px;color:var(--gold);letter-spacing:0.12em;text-transform:uppercase;opacity:0.80}
 footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;color:rgba(255,255,255,0.25);letter-spacing:0.06em}
 
 /* ── LOADING ── */
 #loading{position:fixed;inset:0;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;gap:24px;transition:opacity 0.5s}
-.loading-brand{font-family:Georgia,'Times New Roman',serif;font-size:32px;font-weight:300;color:var(--gold);letter-spacing:0.20em;text-transform:uppercase}
+.loading-brand{font-family:Georgia,serif;font-size:32px;color:var(--gold);letter-spacing:0.20em;text-transform:uppercase}
 .loading-bar{width:120px;height:1px;background:rgba(255,255,255,0.15);position:relative;overflow:hidden;border-radius:2px}
 .loading-fill{position:absolute;top:0;left:-100%;width:100%;height:100%;background:var(--gold);animation:load 1.2s ease-in-out infinite}
 @keyframes load{0%{left:-100%}100%{left:100%}}
@@ -222,11 +186,11 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
 
 /* ── ERRO ── */
 #erro-box{display:none;min-height:100svh;background:var(--navy);align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:40px;text-align:center}
-.erro-titulo{font-family:Georgia,'Times New Roman',serif;font-size:32px;font-weight:300;color:rgba(255,255,255,0.80)}
+.erro-titulo{font-family:Georgia,serif;font-size:32px;color:rgba(255,255,255,0.80)}
 .erro-msg{font-size:14px;color:rgba(255,255,255,0.40);max-width:400px;line-height:1.6}
 
 /* ── MOBILE ── */
-@media(max-width:640px){
+@media(max-width:768px){
   .hero-header{padding:20px}
   .hero-footer{padding:20px;flex-direction:column;align-items:flex-start;gap:12px}
   .hero-preco-box{text-align:left}
@@ -235,9 +199,12 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
   .custos-row{grid-template-columns:1fr}
   .corretor-inner{flex-direction:column;text-align:center;gap:20px}
   .corretor-left{flex-direction:column}
-  .scroll-cta{bottom:130px}
-  .player-controls{padding:0 20px 140px}
-  .play-btn-center{width:60px;height:60px}
+  .scroll-cta{bottom:170px}
+  #video-mobile{display:flex!important}
+  #video-desktop{display:none!important}
+  .hero-overlay{display:none!important}
+  .play-btn-center{display:none!important}
+  .player-controls{display:none!important}
 }
 </style>
 </head>
@@ -252,34 +219,44 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
 <div id="erro-box">
   <div class="loading-brand">Selectlar</div>
   <div class="erro-titulo">Imóvel não encontrado</div>
-  <div class="erro-msg" id="erro-msg">Verifique o link recebido ou entre em contato com o corretor.</div>
+  <div class="erro-msg" id="erro-msg">Verifique o link recebido.</div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <div id="conteudo" style="display:none">
 
-  <section class="hero" id="hero-section">
-    <!-- iframe do Vimeo — controlado via Vimeo Player API -->
-    <div class="hero-video">
+  <section class="hero">
+
+    <!-- Desktop: iframe Vimeo com controles customizados -->
+    <div id="video-desktop">
       <iframe id="video-player" src="" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="Vídeo do imóvel"></iframe>
-    <!-- Camada transparente que captura eventos de mouse/toque sobre o iframe -->
-    <div class="hero-overlay" id="hero-overlay" onclick="togglePlay()"></div>
     </div>
 
-    <!-- Botão central de play/pause -->
-    <div class="play-btn-center" id="play-btn" onclick="togglePlay()" style="display:none">
+    <!-- Mobile: fundo gradiente + botão que abre Vimeo nativo -->
+    <div id="video-mobile" onclick="abrirVimeoNativo()">
+      <div class="mobile-play-btn">
+        <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+      </div>
+      <span class="mobile-play-label">Toque para assistir o vídeo</span>
+    </div>
+
+    <!-- Overlay desktop para capturar mouse -->
+    <div class="hero-overlay" id="hero-overlay" onclick="togglePlay()"></div>
+
+    <!-- Botão play/pause central (desktop) -->
+    <div class="play-btn-center" id="play-btn" onclick="togglePlay()">
       <svg id="play-icon" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
     </div>
 
-    <!-- Controles na parte inferior -->
+    <!-- Controles inferiores (desktop) -->
     <div class="player-controls" id="player-controls">
       <div class="progress-wrap" id="progress-wrap">
         <div class="progress-fill" id="progress-fill"></div>
       </div>
       <div class="controls-row">
         <span class="ctrl-time" id="ctrl-time">0:00 / 0:00</span>
-        <button class="ctrl-mute" id="mute-btn" onclick="toggleMute()" title="Silenciar / Ativar som">
+        <button class="ctrl-mute" onclick="toggleMute()">
           <svg id="mute-icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
             <path id="volume-path" d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
@@ -302,7 +279,7 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
       </div>
     </div>
 
-    <div class="scroll-cta" id="scroll-cta" onclick="document.getElementById('dados-section').scrollIntoView({behavior:'smooth'})">
+    <div class="scroll-cta" onclick="document.getElementById('dados-section').scrollIntoView({behavior:'smooth'})">
       <span>Ver detalhes</span>
       <div class="scroll-arrow"></div>
     </div>
@@ -358,66 +335,75 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
       <div class="corretor-marca">Selectlar</div>
     </div>
   </section>
-
   <footer>© Selectlar · Marco Silva · Corretor Parceiro QuintoAndar · Belo Horizonte, MG</footer>
 </div>
 
 <script>
-/*
-  LÓGICA PRINCIPAL v3.9:
-  - isMobile definido como variável GLOBAL (era local — causava erro silencioso)
-  - Timeout de segurança garante que loading some mesmo se houver erro
-  - Mobile: botão que abre Vimeo nativo, zero chamadas externas
-  - Desktop: controles customizados via Vimeo Player API carregada dinamicamente
-*/
-
 // Parâmetros da URL
-const p          = new URLSearchParams(location.search);
-const imovelId   = p.get('id');
-const clipId     = p.get('clipId');
-const hash       = p.get('hash');
-const rua        = p.get('rua');
-const bairro     = p.get('bairro');
-const cidade     = p.get('cidade') || 'Belo Horizonte';
-const uf         = p.get('uf')     || 'MG';
-const preco      = p.get('preco');
-const quartos    = p.get('quartos');
-const suites     = p.get('suites');
-const area       = p.get('area');
-const vagas      = p.get('vagas');
-const banheiros  = p.get('banheiros');
-const condo      = p.get('condo');
-const iptu       = p.get('iptu');
-const msg        = p.get('msg');
+var p         = new URLSearchParams(location.search);
+var imovelId  = p.get('id');
+var clipId    = p.get('clipId');
+var hash      = p.get('hash');
+var rua       = p.get('rua')       || '';
+var bairro    = p.get('bairro')    || '';
+var cidade    = p.get('cidade')    || 'Belo Horizonte';
+var uf        = p.get('uf')        || 'MG';
+var preco     = p.get('preco')     || '';
+var quartos   = p.get('quartos')   || '';
+var suites    = p.get('suites')    || '';
+var area      = p.get('area')      || '';
+var vagas     = p.get('vagas')     || '';
+var banheiros = p.get('banheiros') || '';
+var condo     = p.get('condo')     || '';
+var iptu      = p.get('iptu')      || '';
+var msg       = p.get('msg')       || '';
 
-// isMobile GLOBAL — evita erro de variável não definida em outras funções
-const isMobile = window.innerWidth <= 768;
+// isMobile GLOBAL
+var isMobile = window.innerWidth <= 768;
 
-let vimeoPlayer = null;
-let duracao     = 0;
-let tocando     = false;
-let mutado      = false;
+// Player
+var vimeoPlayer = null;
+var duracao = 0;
+var tocando = false;
+var mutado  = false;
 
-// Formata valor em reais
-const fmt = v => v
-  ? 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0})
-  : null;
+// Formata reais
+function fmt(v) {
+  if (!v) return '';
+  return 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0});
+}
 
-// Formata segundos em mm:ss
-const fmtTempo = s => {
-  const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
+// Formata tempo mm:ss
+function fmtTempo(s) {
+  var m = Math.floor(s / 60);
+  var sec = Math.floor(s % 60);
   return m + ':' + (sec < 10 ? '0' : '') + sec;
-};
+}
 
-// Exibe erro na tela
+// Gera copy automática com os dados do imóvel
+function gerarCopy() {
+  var partes = [];
+  var tipo = 'Imóvel';
+  if (quartos) tipo = quartos + ' quarto' + (quartos > 1 ? 's' : '');
+  var local = bairro ? 'no bairro ' + bairro + ', em ' + cidade : 'em ' + cidade;
+  partes.push(tipo + ' de ' + (area ? area + 'm² ' : '') + local + '.');
+  var extras = [];
+  if (suites && suites > 0) extras.push(suites + ' suíte' + (suites > 1 ? 's' : ''));
+  if (vagas)     extras.push(vagas + ' vaga' + (vagas > 1 ? 's' : '') + ' de garagem');
+  if (banheiros) extras.push(banheiros + ' banheiro' + (banheiros > 1 ? 's' : ''));
+  if (extras.length) partes.push('Com ' + extras.join(', ') + '.');
+  if (condo) partes.push('Condomínio: ' + fmt(condo) + '/mês.');
+  if (preco) partes.push('Valor de venda: ' + fmt(preco) + '.');
+  partes.push('Uma excelente oportunidade na Região Nordeste de Belo Horizonte. Entre em contato para agendar uma visita!');
+  return partes.join(' ');
+}
+
 function mostrarErro(m) {
   document.getElementById('loading').style.display = 'none';
   document.getElementById('erro-box').style.display = 'flex';
   document.getElementById('erro-msg').textContent = m;
 }
 
-// Oculta loading e exibe conteúdo
 function ocultarLoading() {
   var el = document.getElementById('loading');
   el.style.opacity = '0';
@@ -425,7 +411,6 @@ function ocultarLoading() {
   document.getElementById('conteudo').style.display = 'block';
 }
 
-// Toast de confirmação
 function mostrarToast(m) {
   var t = document.getElementById('toast');
   t.textContent = m;
@@ -433,12 +418,11 @@ function mostrarToast(m) {
   setTimeout(function() { t.classList.remove('show'); }, 2800);
 }
 
-// Compartilhar via Web Share API ou copia o link
 function compartilhar() {
   var url = location.href;
   var titulo = rua || ('Imóvel #' + imovelId);
   if (navigator.share) {
-    navigator.share({ title: titulo + ' · Selectlar', text: 'Veja este imóvel: ' + titulo, url: url });
+    navigator.share({title: titulo + ' · Selectlar', text: 'Veja este imóvel: ' + titulo, url: url});
   } else {
     navigator.clipboard.writeText(url).then(function() {
       mostrarToast('Link copiado! Cole no WhatsApp.');
@@ -448,22 +432,21 @@ function compartilhar() {
   }
 }
 
-// Abre Vimeo no app/browser nativo (mobile)
+// Abre Vimeo nativo no celular
 function abrirVimeoNativo() {
-  if (window._vimeoUrlNativo) {
-    window.open(window._vimeoUrlNativo, '_blank');
-  }
+  var url = hash
+    ? 'https://vimeo.com/' + clipId + '/' + hash
+    : 'https://vimeo.com/' + clipId;
+  window.open(url, '_blank');
 }
 
-// Controles do player (desktop)
+// Controles desktop
 function atualizarIconePlay() {
   var icon = document.getElementById('play-icon');
   if (!icon) return;
-  if (tocando) {
-    icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
-  } else {
-    icon.innerHTML = '<polygon points="5,3 19,12 5,21"/>';
-  }
+  icon.innerHTML = tocando
+    ? '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>'
+    : '<polygon points="5,3 19,12 5,21"/>';
 }
 
 function togglePlay() {
@@ -476,54 +459,31 @@ function toggleMute() {
   mutado = !mutado;
   vimeoPlayer.setMuted(mutado);
   var path = document.getElementById('volume-path');
-  if (path) {
-    path.setAttribute('d', mutado
-      ? 'M23 9l-6 6M17 9l6 6'
-      : 'M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07');
-  }
+  if (path) path.setAttribute('d', mutado
+    ? 'M23 9l-6 6M17 9l6 6'
+    : 'M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07');
 }
 
-// Inicializa o player
-function iniciarPlayer(cId, h) {
-  if (isMobile) {
-    // MOBILE: sem iframe, sem chamada externa — botão abre Vimeo nativo
-    var overlay = document.getElementById('hero-overlay');
-    var vDesktop = document.getElementById('video-desktop');
-    var vMobile = document.getElementById('video-mobile');
-
-    if (overlay)  overlay.style.display  = 'none';
-    if (vDesktop) vDesktop.style.display = 'none';
-    if (vMobile)  vMobile.style.display  = 'block';
-
-    window._vimeoUrlNativo = h
-      ? 'https://vimeo.com/' + cId + '/' + h
-      : 'https://vimeo.com/' + cId;
-
-    var thumbEl = document.getElementById('mobile-thumb-bg');
-    if (thumbEl) {
-      thumbEl.style.background = 'linear-gradient(135deg, #0f2444 0%, #1B3A6B 100%)';
-    }
-
-    // Mobile não precisa de mais nada — retorna e deixa montar() chamar ocultarLoading()
-    return;
-  }
-
-  // DESKTOP: carrega Vimeo Player API dinamicamente
+// Inicia player desktop via Vimeo API carregada dinamicamente
+function iniciarPlayerDesktop(cId, h) {
   var iframe = document.getElementById('video-player');
+  var src = 'https://player.vimeo.com/video/' + cId + '?' +
+    (h ? 'h=' + h + '&' : '') +
+    'controls=0&title=0&byline=0&portrait=0&dnt=1';
+  iframe.src = src;
+
   var script = document.createElement('script');
   script.src = 'https://player.vimeo.com/api/player.js';
   script.onload = function() {
-    var src = 'https://player.vimeo.com/video/' + cId + '?' +
-      (h ? 'h=' + h + '&' : '') +
-      'controls=0&title=0&byline=0&portrait=0&dnt=1';
-    iframe.src = src;
     vimeoPlayer = new Vimeo.Player(iframe);
 
     vimeoPlayer.ready().then(function() {
-      var playBtn = document.getElementById('play-btn');
+      var playBtn  = document.getElementById('play-btn');
       var controls = document.getElementById('player-controls');
-      if (playBtn)  playBtn.style.display  = 'flex';
-      if (controls) controls.style.display = 'block';
+      var overlay  = document.getElementById('hero-overlay');
+      if (playBtn)  { playBtn.style.display  = 'flex'; }
+      if (controls) { controls.style.display = 'block'; }
+      if (overlay)  { overlay.style.display  = 'block'; }
 
       vimeoPlayer.getDuration().then(function(d) {
         duracao = d;
@@ -531,17 +491,16 @@ function iniciarPlayer(cId, h) {
         if (ct) ct.textContent = '0:00 / ' + fmtTempo(d);
       });
 
-      // Hover nos controles via overlay
-      var overlay2 = document.getElementById('hero-overlay');
+      // Hover via overlay
       var hideTimer = null;
-      if (overlay2) {
-        overlay2.addEventListener('mousemove', function() {
-          if (playBtn) playBtn.classList.add('visivel');
+      if (overlay) {
+        overlay.addEventListener('mousemove', function() {
+          if (playBtn)  playBtn.classList.add('visivel');
           if (controls) controls.classList.add('visivel');
           clearTimeout(hideTimer);
           hideTimer = setTimeout(function() {
             if (tocando) {
-              if (playBtn) playBtn.classList.remove('visivel');
+              if (playBtn)  playBtn.classList.remove('visivel');
               if (controls) controls.classList.remove('visivel');
             }
           }, 3000);
@@ -557,38 +516,34 @@ function iniciarPlayer(cId, h) {
           vimeoPlayer.setCurrentTime(((e.clientX - rect.left) / rect.width) * duracao);
         });
       }
-    }).catch(function() {
-      // Fallback: mostra controls nativos se API falhar
-      if (iframe) iframe.src = iframe.src.replace('controls=0', 'controls=1');
+    }).catch(function(err) {
+      console.warn('Vimeo ready() falhou:', err);
     });
 
     vimeoPlayer.on('play', function() {
-      tocando = true;
-      atualizarIconePlay();
+      tocando = true; atualizarIconePlay();
       var pb = document.getElementById('play-btn');
       if (pb) pb.classList.add('oculto-tocando');
     });
 
     vimeoPlayer.on('pause', function() {
-      tocando = false;
-      atualizarIconePlay();
+      tocando = false; atualizarIconePlay();
       var pb = document.getElementById('play-btn');
       var ct2 = document.getElementById('player-controls');
-      if (pb) { pb.classList.remove('oculto-tocando'); pb.classList.add('visivel'); }
+      if (pb)  { pb.classList.remove('oculto-tocando'); pb.classList.add('visivel'); }
       if (ct2) ct2.classList.add('visivel');
     });
 
     vimeoPlayer.on('timeupdate', function(data) {
       var pct = duracao ? (data.seconds / duracao) * 100 : 0;
-      var pf = document.getElementById('progress-fill');
+      var pf  = document.getElementById('progress-fill');
       var ct3 = document.getElementById('ctrl-time');
-      if (pf) pf.style.width = pct + '%';
+      if (pf)  pf.style.width = pct + '%';
       if (ct3) ct3.textContent = fmtTempo(data.seconds) + ' / ' + fmtTempo(duracao);
     });
 
     vimeoPlayer.on('ended', function() {
-      tocando = false;
-      atualizarIconePlay();
+      tocando = false; atualizarIconePlay();
       var pf2 = document.getElementById('progress-fill');
       var pb2 = document.getElementById('play-btn');
       if (pf2) pf2.style.width = '0%';
@@ -596,44 +551,44 @@ function iniciarPlayer(cId, h) {
     });
   };
 
-  script.onerror = function() {
-    console.warn('Vimeo API falhou ao carregar');
-  };
-
+  script.onerror = function() { console.warn('Falha ao carregar Vimeo API'); };
   document.head.appendChild(script);
 }
 
-// Monta a página completa
+// Monta a página
 function montar() {
   try {
-    // Player
+    // Vídeo
     if (clipId) {
-      iniciarPlayer(clipId, hash);
-    } else {
-      var hv = document.getElementById('video-desktop');
-      if (hv) hv.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><span style="color:rgba(255,255,255,0.25);font-size:14px;letter-spacing:0.1em">Vídeo não disponível</span></div>';
+      if (!isMobile) {
+        iniciarPlayerDesktop(clipId, hash);
+      }
+      // Mobile: o CSS já cuida de mostrar #video-mobile e esconder #video-desktop
     }
 
     // Endereço e preço
-    var ruaEl = document.getElementById('hero-rua');
+    var ruaEl    = document.getElementById('hero-rua');
     var bairroEl = document.getElementById('hero-bairro');
-    var precoEl = document.getElementById('hero-preco');
-    if (ruaEl) ruaEl.textContent = rua || ('Imóvel #' + imovelId);
-    if (bairroEl) bairroEl.textContent = [bairro, cidade, uf].filter(Boolean).join(' · ').toUpperCase();
-    if (precoEl) precoEl.textContent = fmt(preco) || 'Consulte';
+    var precoEl  = document.getElementById('hero-preco');
+    if (ruaEl)    ruaEl.textContent    = rua    || ('Imóvel #' + imovelId);
+    if (bairroEl) bairroEl.textContent = [bairro, cidade, uf].filter(function(x){return x;}).join(' · ').toUpperCase();
+    if (precoEl)  precoEl.textContent  = fmt(preco) || 'Consulte';
 
     // Características
     var itens = [];
-    if (quartos)   itens.push({ num: quartos,   label: 'Quartos',    detalhe: (suites && suites > 0) ? suites + ' suíte' + (suites > 1 ? 's' : '') : '' });
-    if (area)      itens.push({ num: area,       label: 'Área total', detalhe: 'metros quadrados' });
-    if (vagas)     itens.push({ num: vagas,      label: 'Vagas',      detalhe: 'de garagem' });
-    if (banheiros) itens.push({ num: banheiros,  label: 'Banheiros',  detalhe: '' });
+    if (quartos)   itens.push({num: quartos,   label: 'Quartos',    detalhe: (suites && suites > 0) ? suites + ' suíte' + (suites > 1 ? 's' : '') : ''});
+    if (area)      itens.push({num: area,       label: 'Área total', detalhe: 'metros quadrados'});
+    if (vagas)     itens.push({num: vagas,      label: 'Vagas',      detalhe: 'de garagem'});
+    if (banheiros) itens.push({num: banheiros,  label: 'Banheiros',  detalhe: ''});
 
     var grid = document.getElementById('chars-grid');
     if (grid) {
       if (itens.length) {
         grid.innerHTML = itens.map(function(i) {
-          return '<div class="char-item"><div class="char-num">' + i.num + '</div><div class="char-label">' + i.label + '</div>' + (i.detalhe ? '<div class="char-detalhe">' + i.detalhe + '</div>' : '') + '</div>';
+          return '<div class="char-item"><div class="char-num">' + i.num +
+            '</div><div class="char-label">' + i.label + '</div>' +
+            (i.detalhe ? '<div class="char-detalhe">' + i.detalhe + '</div>' : '') +
+            '</div>';
         }).join('');
       } else {
         grid.style.display = 'none';
@@ -649,12 +604,20 @@ function montar() {
       if (row) { row.innerHTML = custos.join(''); row.style.display = 'grid'; }
     }
 
-    // Nota do corretor
+    // Nota do corretor — usa msg customizada ou gera copy automática
+    var textoFinal = '';
     if (msg && msg.trim()) {
+      textoFinal = decodeURIComponent(msg).slice(0, 500);
+    } else if (quartos || area || bairro) {
+      // Gera copy automática quando há dados suficientes
+      textoFinal = gerarCopy();
+    }
+
+    if (textoFinal) {
       var obsTexto = document.getElementById('obs-texto');
-      var obsCard = document.getElementById('obs-card');
-      if (obsTexto) obsTexto.textContent = decodeURIComponent(msg).slice(0, 500);
-      if (obsCard) obsCard.style.display = 'block';
+      var obsCard  = document.getElementById('obs-card');
+      if (obsTexto) obsTexto.textContent = textoFinal;
+      if (obsCard)  obsCard.style.display = 'block';
     }
 
   } catch(e) {
@@ -665,11 +628,11 @@ function montar() {
   ocultarLoading();
 }
 
-// Timeout de segurança — garante que loading some em até 5 segundos
+// Timeout de segurança — loading some em até 5s mesmo se houver erro
 setTimeout(function() {
   var loading = document.getElementById('loading');
   if (loading && loading.style.display !== 'none') {
-    console.warn('Timeout de segurança ativado — forçando ocultarLoading()');
+    console.warn('Timeout de segurança ativado');
     ocultarLoading();
   }
 }, 5000);
