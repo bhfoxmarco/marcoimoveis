@@ -1,4 +1,4 @@
-<!-- DATA DE CRIAÇÃO: 16/06/2025 - 20:50 -->
+<!-- DATA DE CRIAÇÃO: 16/06/2026 - 21:24 -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -7,7 +7,7 @@
   PROJETO : Selectlar · Vitrine de Vídeo de Imóvel
   ARQUIVO : videoimoveis/index.html
   AUTOR   : Marco Silva · Selectlar · Corretor Parceiro QuintoAndar
-  VERSÃO  : 3.3
+  VERSÃO  : 3.4
 
   OBJETIVO:
     Página de apresentação premium de imóvel com vídeo, características
@@ -501,10 +501,22 @@ function iniciarPlayer(cId, h) {
   const iframe = document.getElementById('video-player');
 
   // URL sem controls — usamos os controles customizados
-  // No celular usa interface nativa do Vimeo (controls=1)
-  // No desktop usa controles customizados (controls=0)
   const isMobile = window.innerWidth <= 768;
-  const src = `https://player.vimeo.com/video/${cId}?${h ? 'h=' + h + '&' : ''}controls=${isMobile ? 1 : 0}&title=0&byline=0&portrait=0&dnt=1`;
+
+  if (isMobile) {
+    // CELULAR: usa iframe separado com controles nativos do Vimeo
+    // Remove o overlay e o iframe desktop
+    document.getElementById('hero-overlay').style.display = 'none';
+    document.getElementById('video-desktop').style.display = 'none';
+    document.getElementById('video-mobile').style.display = 'block';
+    const mobileIframe = document.getElementById('video-player-mobile');
+    mobileIframe.src = `https://player.vimeo.com/video/${cId}?${h ? 'h=' + h + '&' : ''}controls=1&title=0&byline=0&portrait=0&dnt=1`;
+    ocultarLoading();
+    return; // Não inicializa Player API no mobile
+  }
+
+  // DESKTOP: iframe com controles customizados via Vimeo Player API
+  const src = `https://player.vimeo.com/video/${cId}?${h ? 'h=' + h + '&' : ''}controls=0&title=0&byline=0&portrait=0&dnt=1`;
   iframe.src = src;
 
   // Instancia o Vimeo Player via API
@@ -538,10 +550,6 @@ function iniciarPlayer(cId, h) {
 
       overlay.addEventListener('mousemove', mostrarControles);
       overlay.addEventListener('mouseenter', mostrarControles);
-    } else {
-      // Celular: esconde overlay para não bloquear toque no Vimeo nativo
-      const overlay = document.getElementById('hero-overlay');
-      if (overlay) overlay.style.display = 'none';
     }
 
     // Pega duração total do vídeo
