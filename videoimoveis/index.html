@@ -73,13 +73,16 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);ove
 .hero-video{position:absolute;inset:0;width:100%;height:100%}
 .hero-video iframe{width:100%;height:100%;border:none;pointer-events:none}
 
+/* Camada transparente sobre o iframe que captura mouse e toque */
+.hero-overlay{position:absolute;inset:0;z-index:5;cursor:pointer}
+
 /* Vinhetas para legibilidade do texto sobre o vídeo */
 .hero::before{content:'';position:absolute;top:0;left:0;right:0;height:220px;background:linear-gradient(to bottom,rgba(10,22,44,0.88) 0%,transparent 100%);z-index:2;pointer-events:none}
 .hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:300px;background:linear-gradient(to top,rgba(10,22,44,0.95) 0%,transparent 100%);z-index:2;pointer-events:none}
 
 /* ── CONTROLES CUSTOMIZADOS DO PLAYER (apenas desktop) ── */
 
-/* Controles ficam invisíveis por padrão, aparecem no hover */
+/* Controles ficam invisíveis por padrão, aparecem via JS no mousemove */
 .player-controls{
   position:absolute;
   bottom:0;left:0;right:0;
@@ -90,9 +93,9 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);ove
   transition:opacity 0.3s;
   background:linear-gradient(to top,rgba(10,22,44,0.70) 0%,transparent 100%);
 }
-.hero:hover .player-controls{ opacity:1 }
+.player-controls.visivel{ opacity:1 }
 
-/* Botão central — visível no hover quando pausado, some quando tocando */
+/* Botão central */
 .play-btn-center{
   position:absolute;
   top:50%;left:50%;
@@ -108,8 +111,7 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);ove
   opacity:0;
   transition:all 0.25s;
 }
-.hero:hover .play-btn-center{ opacity:1 }
-/* Classe adicionada via JS quando vídeo está tocando — some o botão central */
+.play-btn-center.visivel{ opacity:1 }
 .play-btn-center.oculto-tocando{ opacity:0!important;pointer-events:none!important }
 .play-btn-center:hover{background:rgba(255,255,255,0.25);transform:translate(-50%,-50%) scale(1.08)}
 .play-btn-center svg{width:28px;height:28px;fill:#fff;margin-left:4px}
@@ -262,6 +264,8 @@ footer{background:var(--ink);padding:20px 24px;text-align:center;font-size:11px;
     <!-- iframe do Vimeo — controlado via Vimeo Player API -->
     <div class="hero-video">
       <iframe id="video-player" src="" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="Vídeo do imóvel"></iframe>
+    <!-- Camada transparente que captura eventos de mouse/toque sobre o iframe -->
+    <div class="hero-overlay" id="hero-overlay" onclick="togglePlay()"></div>
     </div>
 
     <!-- Botão central de play/pause -->
@@ -508,10 +512,36 @@ function iniciarPlayer(cId, h) {
 
   // Quando o player estiver pronto
   vimeoPlayer.ready().then(() => {
-    // Só ativa controles customizados no desktop
     if (!isMobile) {
+      // Desktop: ativa controles customizados
       document.getElementById('play-btn').style.display = 'flex';
       document.getElementById('player-controls').style.display = 'block';
+
+      // Hover via overlay — mais confiável que CSS hover com iframe
+      const overlay = document.getElementById('hero-overlay');
+      const playBtn = document.getElementById('play-btn');
+      const controls = document.getElementById('player-controls');
+      let hideTimer = null;
+
+      function mostrarControles() {
+        playBtn.classList.add('visivel');
+        controls.classList.add('visivel');
+        clearTimeout(hideTimer);
+        // Esconde após 3 segundos sem mover o mouse
+        hideTimer = setTimeout(() => {
+          if (tocando) {
+            playBtn.classList.remove('visivel');
+            controls.classList.remove('visivel');
+          }
+        }, 3000);
+      }
+
+      overlay.addEventListener('mousemove', mostrarControles);
+      overlay.addEventListener('mouseenter', mostrarControles);
+    } else {
+      // Celular: esconde overlay para não bloquear toque no Vimeo nativo
+      const overlay = document.getElementById('hero-overlay');
+      if (overlay) overlay.style.display = 'none';
     }
 
     // Pega duração total do vídeo
@@ -524,18 +554,21 @@ function iniciarPlayer(cId, h) {
     iframe.src = iframe.src.replace('controls=0', 'controls=1');
   });
 
-  // Evento: vídeo tocando — some o botão central para tela limpa
+  // Evento: vídeo tocando — some o botão central, tela limpa
   vimeoPlayer.on('play', () => {
     tocando = true;
     atualizarIconePlay();
     document.getElementById('play-btn').classList.add('oculto-tocando');
   });
 
-  // Evento: vídeo pausado — mostra botão central no hover
+  // Evento: vídeo pausado — mostra botão central
   vimeoPlayer.on('pause', () => {
     tocando = false;
     atualizarIconePlay();
-    document.getElementById('play-btn').classList.remove('oculto-tocando');
+    const playBtn = document.getElementById('play-btn');
+    playBtn.classList.remove('oculto-tocando');
+    playBtn.classList.add('visivel');
+    document.getElementById('player-controls').classList.add('visivel');
   });
 
   // Evento: progresso de tempo — atualiza barra e contador
