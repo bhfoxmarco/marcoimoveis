@@ -1,4 +1,4 @@
-<!-- DATA DE CRIAÇÃO: 18/06/2026 - 18:08 -->
+<!-- DATA DE CRIAÇÃO: 18/06/2026 - 18:53 -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -7,7 +7,7 @@
   PROJETO : Marco Imóveis · Vitrine de Imóveis — Região Nordeste BH
   ARQUIVO : vitrinesite/index.html
   AUTOR   : Marco Silva · Corretor Parceiro QuintoAndar
-  VERSÃO  : 2.2
+  VERSÃO  : 2.3
 
   CHANGELOG (últimas 3 versões):
     v2.1 - 17/06/2026: Adicionado suporte a parâmetros ?min= e ?max= na URL
@@ -247,6 +247,39 @@
     .vazio-titulo { font-size: 1rem; font-weight: 600; color: #888; margin-bottom: 6px; }
     .vazio-sub { font-size: 0.85rem; }
 
+    /* ── Botão atualizar vitrine ── */
+    .btn-atualizar-wrap {
+      background: white;
+      border-top: 1px solid #e8e8e8;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .btn-atualizar {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #1B3A6B;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 9px 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .btn-atualizar:hover { background: #254d8f; transform: translateY(-1px); }
+    .btn-atualizar:disabled { background: #aaa; cursor: not-allowed; transform: none; }
+    .btn-atualizar-status {
+      font-size: 0.75rem;
+      color: #888;
+    }
+    .btn-atualizar-status.ok { color: #27ae60; font-weight: 600; }
+    .btn-atualizar-status.erro { color: #e74c3c; font-weight: 600; }
+
     footer {
       background: white; border-top: 1px solid #e8e8e8;
       padding: 18px 24px; text-align: center;
@@ -335,6 +368,14 @@
 </div>
 
 <div class="container" id="conteudo"></div>
+
+<!-- Botão de atualização da vitrine -->
+<div class="btn-atualizar-wrap">
+  <button class="btn-atualizar" id="btn-atualizar" onclick="atualizarVitrine()">
+    🔄 Atualizar Vitrine
+  </button>
+  <span class="btn-atualizar-status" id="status-atualizar"></span>
+</div>
 
 <footer>
   Curadoria por <strong>Marco Silva · Selectlar</strong> · Corretor Parceiro QuintoAndar
@@ -606,6 +647,63 @@
           }
         }, 500);
       });
+  }
+
+  // ── Função de atualização da vitrine via GitHub API ─────────────────────
+  // Token com permissão de escrita no repositório bhfoxmarco/marcoimoveis
+  var GITHUB_TOKEN_VITRINE = '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';
+
+  async function atualizarVitrine() {
+    var btn = document.getElementById('btn-atualizar');
+    var status = document.getElementById('status-atualizar');
+
+    var dados = localStorage.getItem('selectlar_imoveis');
+    if (!dados) {
+      status.className = 'btn-atualizar-status erro';
+      status.textContent = '❌ Sem dados para publicar — rode a coleta primeiro';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '⏳ Publicando...';
+    status.className = 'btn-atualizar-status';
+    status.textContent = '';
+
+    var apiUrl = 'https://api.github.com/repos/bhfoxmarco/marcoimoveis/contents/vitrinesite/data.json';
+    var headers = {
+      'Authorization': 'Bearer ' + GITHUB_TOKEN_VITRINE,
+      'Accept': 'application/vnd.github+json',
+      'Content-Type': 'application/json'
+    };
+
+    // Busca SHA atual do arquivo para fazer o update
+    var sha = null;
+    try {
+      var r = await fetch(apiUrl, { headers: headers });
+      if (r.ok) { var a = await r.json(); sha = a.sha; }
+    } catch(e) {}
+
+    var conteudo = btoa(unescape(encodeURIComponent(dados)));
+    var body = { message: 'feat: atualiza data.json via vitrine', content: conteudo, branch: 'main' };
+    if (sha) body.sha = sha;
+
+    try {
+      var res = await fetch(apiUrl, { method: 'PUT', headers: headers, body: JSON.stringify(body) });
+      if (res.ok) {
+        var agora = new Date().toLocaleString('pt-BR');
+        btn.disabled = false;
+        btn.innerHTML = '🔄 Atualizar Vitrine';
+        status.className = 'btn-atualizar-status ok';
+        status.textContent = '✅ Vitrine atualizada em: ' + agora;
+      } else {
+        throw new Error('Erro na API');
+      }
+    } catch(e) {
+      btn.disabled = false;
+      btn.innerHTML = '🔄 Atualizar Vitrine';
+      status.className = 'btn-atualizar-status erro';
+      status.textContent = '❌ Falha ao publicar — verifique o token';
+    }
   }
 
   init();
