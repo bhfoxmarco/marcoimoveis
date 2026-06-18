@@ -1,4 +1,4 @@
-<!-- DATA DE CRIAÇÃO: 18/06/2026 - 18:53 -->
+<!-- DATA DE CRIAÇÃO: 18/06/2026 - 19:22 -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -7,7 +7,7 @@
   PROJETO : Marco Imóveis · Vitrine de Imóveis — Região Nordeste BH
   ARQUIVO : vitrinesite/index.html
   AUTOR   : Marco Silva · Corretor Parceiro QuintoAndar
-  VERSÃO  : 2.3
+  VERSÃO  : 2.5
 
   CHANGELOG (últimas 3 versões):
     v2.1 - 17/06/2026: Adicionado suporte a parâmetros ?min= e ?max= na URL
@@ -315,6 +315,14 @@
   <a onclick="limparFiltroUrl()">Ver todos</a>
 </div>
 
+<!-- Botão atualizar vitrine — visível apenas no desktop, some no celular -->
+<div class="btn-atualizar-wrap" id="wrap-atualizar">
+  <button class="btn-atualizar" id="btn-atualizar" onclick="atualizarVitrine()">
+    🔄 Atualizar Vitrine
+  </button>
+  <span class="btn-atualizar-status" id="status-atualizar"></span>
+</div>
+
 <div class="hero">
   <div class="hero-inner">
     <h1>Imóveis à venda — Região Nordeste</h1>
@@ -368,14 +376,6 @@
 </div>
 
 <div class="container" id="conteudo"></div>
-
-<!-- Botão de atualização da vitrine -->
-<div class="btn-atualizar-wrap">
-  <button class="btn-atualizar" id="btn-atualizar" onclick="atualizarVitrine()">
-    🔄 Atualizar Vitrine
-  </button>
-  <span class="btn-atualizar-status" id="status-atualizar"></span>
-</div>
 
 <footer>
   Curadoria por <strong>Marco Silva · Selectlar</strong> · Corretor Parceiro QuintoAndar
@@ -651,7 +651,7 @@
 
   // ── Função de atualização da vitrine via GitHub API ─────────────────────
   // Token com permissão de escrita no repositório bhfoxmarco/marcoimoveis
-  var GITHUB_TOKEN_VITRINE = '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';
+  var GITHUB_TOKEN_VITRINE = null; // Token salvo no localStorage do browser — nunca no código
 
   async function atualizarVitrine() {
     var btn = document.getElementById('btn-atualizar');
@@ -664,6 +664,19 @@
       return;
     }
 
+    // Busca token salvo no localStorage do browser
+    // Nunca fica no código — só no seu browser desktop
+    var token = localStorage.getItem('vitrine_github_token');
+    if (!token) {
+      token = prompt('Cole seu GitHub Token (será salvo apenas neste browser):');
+      if (!token || !token.trim()) {
+        status.className = 'btn-atualizar-status erro';
+        status.textContent = '❌ Token não informado';
+        return;
+      }
+      localStorage.setItem('vitrine_github_token', token.trim());
+    }
+
     btn.disabled = true;
     btn.textContent = '⏳ Publicando...';
     status.className = 'btn-atualizar-status';
@@ -671,12 +684,11 @@
 
     var apiUrl = 'https://api.github.com/repos/bhfoxmarco/marcoimoveis/contents/vitrinesite/data.json';
     var headers = {
-      'Authorization': 'Bearer ' + GITHUB_TOKEN_VITRINE,
+      'Authorization': 'Bearer ' + token,
       'Accept': 'application/vnd.github+json',
       'Content-Type': 'application/json'
     };
 
-    // Busca SHA atual do arquivo para fazer o update
     var sha = null;
     try {
       var r = await fetch(apiUrl, { headers: headers });
@@ -696,14 +708,23 @@
         status.className = 'btn-atualizar-status ok';
         status.textContent = '✅ Vitrine atualizada em: ' + agora;
       } else {
-        throw new Error('Erro na API');
+        // Token inválido — limpa e pede de novo na próxima vez
+        localStorage.removeItem('vitrine_github_token');
+        throw new Error('Token inválido');
       }
     } catch(e) {
       btn.disabled = false;
       btn.innerHTML = '🔄 Atualizar Vitrine';
       status.className = 'btn-atualizar-status erro';
-      status.textContent = '❌ Falha ao publicar — verifique o token';
+      status.textContent = '❌ Falha — token inválido ou expirado. Tente novamente.';
     }
+  }
+
+  // Esconde botão de atualizar no celular — só funciona no desktop
+  // pois o localStorage com dados só existe no desktop com a extensão instalada
+  if (window.innerWidth <= 768) {
+    var wrap = document.getElementById('wrap-atualizar');
+    if (wrap) wrap.style.display = 'none';
   }
 
   init();
