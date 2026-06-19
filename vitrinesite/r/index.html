@@ -61,7 +61,7 @@ if (!codigo) {
   document.getElementById('msg').textContent = 'Link inválido.';
 } else {
   // Busca o links.json no GitHub Pages
-  fetch('/r/links.json?t=' + Date.now())
+  fetch('/vitrinesite/r/links.json?t=' + Date.now())
     .then(function(r) { return r.json(); })
     .then(function(links) {
       var destino = links[codigo];
