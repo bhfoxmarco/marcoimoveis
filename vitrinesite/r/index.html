@@ -1,4 +1,4 @@
-<!-- DATA DE CRIAÇÃO: 18/06/2026 - 20:01 -->
+<!-- DATA DE CRIAÇÃO: 18/06/2026 - 21:47 -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -7,7 +7,7 @@
   PROJETO : Marco Imóveis · Encurtador de Links
   ARQUIVO : r/index.html
   AUTOR   : Marco Silva · Corretor Parceiro QuintoAndar
-  VERSÃO  : 1.0
+  VERSÃO  : 1.1
 
   CHANGELOG (últimas 3 versões):
     v1.0 - 18/06/2026: Criação do encurtador de links próprio
@@ -61,7 +61,7 @@ if (!codigo) {
   document.getElementById('msg').textContent = 'Link inválido.';
 } else {
   // Busca o links.json no GitHub Pages
-  fetch('/vitrinesite/r/links.json?t=' + Date.now())
+  fetch('/vitrinesite/r/links.json?t=' + Date.now() + Math.random())
     .then(function(r) { return r.json(); })
     .then(function(links) {
       var destino = links[codigo];
